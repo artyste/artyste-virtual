@@ -61,6 +61,7 @@
 		var engine = null;
 		var scene = null;
 		var sceneToRender = null;
+		var camera = null;
 		var createDefaultEngine = function () { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, disableWebGL2Support: false }); };
 		var createScene = function (jsonData) {
 
@@ -68,11 +69,12 @@
 			scene.clearColor = BABYLON.Color3.Black();
 			// scene.debugLayer.show();
 
-			var camera = new BABYLON.FreeCamera("camera", new BABYLON.Vector3(0, 1.5, -5), scene);
+			camera = new BABYLON.FreeCamera("camera", new BABYLON.Vector3(0, 1, -4), scene);
 			// camera.setTarget(BABYLON.Vector3.Zero());
 			camera.attachControl(false);
-			camera.angularSensibility = 10000;
+			camera.angularSensibility = 15000;
 			camera.speed = 0.05;
+			camera.minZ = 0.01;
 
 
 			var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, -1), scene);
@@ -102,6 +104,9 @@
 					var matBanner = new BABYLON.StandardMaterial("matBanner", scene);
 					matBanner.diffuseTexture = new BABYLON.Texture(jsonData[i].gallery.banner, scene);
 					matBanner.speculartexture = new BABYLON.Texture(jsonData[i].gallery.banner, scene);
+					let specColorPwr = 1;
+					matBanner.specularPower = 50;
+					matBanner.specularColor = new BABYLON.Color3(specColorPwr, specColorPwr, specColorPwr);
 					planeBanner.material = matBanner;
 
 				}
@@ -117,6 +122,9 @@
 					var matArt = new BABYLON.StandardMaterial("matArt", scene);
 					matArt.diffuseTexture = new BABYLON.Texture(jsonData[i].fileimage, scene);
 					matArt.speculartexture = new BABYLON.Texture(jsonData[i].fileimage, scene);
+					let specColorPwr = 0.5;
+					matArt.specularPower = 200;
+					matArt.specularColor = new BABYLON.Color3(specColorPwr, specColorPwr, specColorPwr);
 					planeArt.material = matArt;
 				}
 			}
@@ -159,6 +167,31 @@
 
 			});
 
+			//LOAD AUDIO
+			var music = new BABYLON.Sound("music", "audio/music.mp3", scene, function () {
+				console.log("music laoded!!");
+				music.setPosition(new BABYLON.Vector3(0, 0, 2));
+				music.play();
+			}, {
+				volume: 0.8,
+				loop: true,
+				// autoplay: true,
+				spatialSound: true,
+				distanceModel: "exponential",
+				rolloffFactor: 0.4
+			});
+			var chat = new BABYLON.Sound("chat", "audio/chat.mp3", scene, function () {
+				console.log("chat laoded!!");
+				chat.setPosition(new BABYLON.Vector3(0, 0, -4));
+				chat.play();
+			}, {
+				volume: 0.1,
+				loop: true,
+				// autoplay: true,
+				spatialSound: true,
+				distanceModel: "exponential",
+				rolloffFactor: 1
+			});
 
 			//GAMEPLAY
 			scene.onKeyboardObservable.add((kbInfo) => {
@@ -212,6 +245,7 @@
 			sceneToRender = scene
 			engine.runRenderLoop(function () {
 				if (sceneToRender && sceneToRender.activeCamera) {
+					camera.position.y = 1;
 
 					sceneToRender.render();
 				}
