@@ -63,6 +63,16 @@
 		var sceneToRender = null;
 		var camera = null;
 		var createDefaultEngine = function () { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, disableWebGL2Support: false }); };
+		var wDown = false;
+		var aDown = false;
+		var sDown = false;
+		var dDown = false;
+		var xSpeed = 0;
+		var zSpeed = 0;
+		var walkSpeed = 10;
+		var brakeSpeed = 10;
+
+
 		var createScene = function (jsonData) {
 
 			var scene = new BABYLON.Scene(engine);
@@ -75,6 +85,10 @@
 			camera.angularSensibility = 15000;
 			camera.speed = 0.05;
 			camera.minZ = 0.01;
+			camera.keysUp = [38, 87];		//W
+			camera.keysLeft = [37, 65];	//A
+			camera.keysDown = [40, 83];	//S
+			camera.keysRight = [39, 68];//D
 
 
 			var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, -1), scene);
@@ -200,29 +214,33 @@
 						console.log("KEY DOWN: ", kbInfo.event.key);
 						switch (kbInfo.event.keyCode) {
 							case 87: //W: Move OBJECT towards, NOT camera. TODO: create character RIG
-
-								break;
-							case 65: //A
-
-								break;
-							case 83: //S
-
-								break;
-							case 68: //D
-
 								break;
 						}
 						break;
 					case BABYLON.KeyboardEventTypes.KEYUP:
 						console.log("KEY UP: ", kbInfo.event.keyCode);
+						switch (kbInfo.event.keyCode) {
+							case 87: //W: Move OBJECT towards, NOT camera. TODO: create character RIG
+								break;
+						}
 						break;
 				}
 			});
+			
+			//OLD
+			// xSpeed = (aDown ? -1 : 0) + (dDown ? 1 : 0);
+			// zSpeed = (sDown ? -1 : 0) + (wDown ? 1 : 0);
+			// camera.translate(BABYLON.Axis.X, xSpeed, BABYLON.Space.LOCAL);
+			// camera.translate(BABYLON.Axis.Z, zSpeed, BABYLON.Space.LOCAL);
+			// xSpeed -= brakeSpeed * engine.getDeltaTime();
+			// zSpeed -= brakeSpeed * engine.getDeltaTime();
+
 
 
 			return scene;
 
 		};
+
 
 		window.initFunction = async function () {
 			var asyncEngineCreation = async function () {
