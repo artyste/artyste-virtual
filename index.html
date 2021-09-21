@@ -81,7 +81,7 @@
 			camera.keysDown = [40, 83];	//S
 			camera.keysRight = [39, 68];//D
 
-
+			
 			var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, -1), scene);
 			light.intensity = 0.8;
 
@@ -127,9 +127,9 @@
 					planeArt.rotation = new BABYLON.Vector3(0.45 * Math.PI / 2, 0, 0);
 
 					var matArt = new BABYLON.StandardMaterial("matArt", scene);
-					var texArt = new BABYLON.Texture(jsonData[i].fileimage, scene, false, true, BABYLON.Texture.TRILINEAR_SAMPLINGMODE, function () {
-						let texSize = texArt.getSize();
-						if (texSize.width != 0) { //JPG returns 0
+					let texArt = new BABYLON.Texture(jsonData[i].fileimage, scene, false, true, BABYLON.Texture.TRILINEAR_SAMPLINGMODE, function () {
+						var texSize = texArt.getSize();
+						if (texSize.width != 0) { //malformed returns
 							planeArt.scaling = new BABYLON.Vector3(1, texSize.height / texSize.width, 1);
 						}
 					});
