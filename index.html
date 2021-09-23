@@ -61,8 +61,9 @@
 		var engine = null;
 		var scene = null;
 		var sceneToRender = null;
-		var camera = null;
 		var createDefaultEngine = function () { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, disableWebGL2Support: false }); };
+		var camera = null;
+
 
 		var createScene = async function (jsonData) {
 
@@ -80,10 +81,19 @@
 			camera.keysLeft = [37, 65];	//A
 			camera.keysDown = [40, 83];	//S
 			camera.keysRight = [39, 68];//D
-
+			// camera.keysRotateLeft = [37];	//L
+			// camera.keysRotateRight = [39];	//R
+			const frameSize = 1.2;
+			const frameScale = new BABYLON.Vector3(frameSize, frameSize, frameSize);
 
 			var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, -1), scene);
 			light.intensity = 0.8;
+
+			const galleryIdx = jsonData.length - 1;
+			const color1 = jsonData[galleryIdx].gallery.color1 != null ? new BABYLON.Color3.FromHEXString(jsonData[galleryIdx].gallery.color1) : BABYLON.Color3.White();
+			const color2 = jsonData[galleryIdx].gallery.color2 != null ? new BABYLON.Color3.FromHEXString(jsonData[galleryIdx].gallery.color2) : BABYLON.Color3.Black();
+			const color3 = jsonData[galleryIdx].gallery.color3 != null ? new BABYLON.Color3.FromHEXString(jsonData[galleryIdx].gallery.color3) : BABYLON.Color3.White();
+
 
 			// LOAD ARTS
 			var arts = [];
@@ -125,20 +135,34 @@
 					planeArt.position.y = 0.5;
 					planeArt.position.z = -0.5;
 					planeArt.rotation = new BABYLON.Vector3(0.45 * Math.PI / 2, 0, 0);
+					let frame = planeArt.clone();
 
-					var matArt = new BABYLON.StandardMaterial("matArt", scene);
+					let matArt = new BABYLON.StandardMaterial("matArt", scene);
 					let texArt = new BABYLON.Texture(jsonData[i].fileimage, scene, false, true, BABYLON.Texture.TRILINEAR_SAMPLINGMODE, function () {
 						var texSize = texArt.getSize();
 						if (texSize.width != 0) { //malformed returns
+							//Scaling ART & FRAME
 							planeArt.scaling = new BABYLON.Vector3(1, texSize.height / texSize.width, 1);
+							frame.scaling = planeArt.scaling;
+							frame.scaling = frame.scaling.multiply(frameScale);
 						}
 					});
 					matArt.diffuseTexture = texArt;
 					matArt.speculartexture = texArt;
-					let specColorPwr = 0.5;
+					var specColorPwr = 0.5;
 					matArt.specularPower = 200;
 					matArt.specularColor = new BABYLON.Color3(specColorPwr, specColorPwr, specColorPwr);
 					planeArt.material = matArt;
+
+					//FRAME
+					frame.translate(BABYLON.Axis.Z, 0.01, BABYLON.Space.LOCAL);
+					let matFrame = new BABYLON.StandardMaterial("matFrame", scene);
+					matFrame.diffuseColor = color2;
+					var specColorPwr = 0.3;
+					matFrame.specularPower = 500;
+					matFrame.specularColor = new BABYLON.Color3(specColorPwr, specColorPwr, specColorPwr);
+					frame.material = matFrame;
+
 				}
 			}
 
