@@ -94,6 +94,8 @@
 			const color2 = jsonData[galleryIdx].gallery.color2 != null ? new BABYLON.Color3.FromHEXString(jsonData[galleryIdx].gallery.color2) : BABYLON.Color3.Black();
 			const color3 = jsonData[galleryIdx].gallery.color3 != null ? new BABYLON.Color3.FromHEXString(jsonData[galleryIdx].gallery.color3) : BABYLON.Color3.White();
 
+			const sceneID = jsonData[galleryIdx].gallery.scene != null ? jsonData[galleryIdx].gallery.scene : 1;
+			console.log(sceneID);
 
 			// LOAD ARTS
 			var arts = [];
@@ -129,9 +131,11 @@
 				}
 				else { //arts
 					console.log(jsonData[i].title);
-					const planeArt = BABYLON.MeshBuilder.CreatePlane("planeArt",
-						{ height: 0.8, width: 0.8 });
-					planeArt.position.x = -1 + i;
+					// const planeArt = BABYLON.MeshBuilder.CreatePlane("planeArt",
+					// 	{ height: 0.8, width: 0.8 });
+					let planeArt = BABYLON.Mesh.CreateBox("planeArt", 1, scene);
+					planeArt.scaling = new BABYLON.Vector3(1, 1, 0.002);
+					planeArt.position.x = (i - (jsonData.length / 2)) * 1.5;
 					planeArt.position.y = 0.5;
 					planeArt.position.z = -0.5;
 					planeArt.rotation = new BABYLON.Vector3(0.45 * Math.PI / 2, 0, 0);
@@ -142,9 +146,10 @@
 						var texSize = texArt.getSize();
 						if (texSize.width != 0) { //malformed returns
 							//Scaling ART & FRAME
-							planeArt.scaling = new BABYLON.Vector3(1, texSize.height / texSize.width, 1);
+							planeArt.scaling = new BABYLON.Vector3(1, texSize.height / texSize.width, 0.002);
 							frame.scaling = planeArt.scaling;
 							frame.scaling = frame.scaling.multiply(frameScale);
+							frame.scaling.z = 0.02;
 						}
 					});
 					matArt.diffuseTexture = texArt;
@@ -155,9 +160,9 @@
 					planeArt.material = matArt;
 
 					//FRAME
-					frame.translate(BABYLON.Axis.Z, 0.01, BABYLON.Space.LOCAL);
+					frame.translate(BABYLON.Axis.Z, 10, BABYLON.Space.LOCAL);
 					let matFrame = new BABYLON.StandardMaterial("matFrame", scene);
-					matFrame.diffuseColor = color2;
+					matFrame.diffuseColor = color1;
 					var specColorPwr = 0.3;
 					matFrame.specularPower = 500;
 					matFrame.specularColor = new BABYLON.Color3(specColorPwr, specColorPwr, specColorPwr);
@@ -173,37 +178,49 @@
 			var ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 100, height: 100 }, scene);
 			ground.visibility = 0;
 
-			BABYLON.SceneLoader.ImportMesh("", "https://models.babylonjs.com/CornellBox/", "cornellBox.glb", scene, function (newMeshes) {
-				newMeshes[0].rotationQuaternion = null;
-				newMeshes[0].rotation.y = 0;
+			console.log("scene_" + sceneID);
 
-				scene.getMaterialByName("light.000").emissiveColor = BABYLON.Color3.White();
-
-				/* lightmaps assignation */
-
-				// we have to cycles through objects to assign their lightmaps
-				const lightmappedMeshes = ["bloc.000", "suzanne.000", "cornellBox.000"];
-
-				lightmappedMeshes.forEach((meshName) => {
-					// lightmap texture creation
-					let currentLightmap = new BABYLON.Texture(
-						"https://models.babylonjs.com/CornellBox/" + meshName + ".lightmap.jpg",
-						scene,
-						null,
-						false);
-					currentLightmap.onLoadObservable.addOnce(function (tex) {
-						currentLightmap.name = meshName + "-lightmap";
-						newMeshes.forEach((mesh) => {
-							if (mesh.name.indexOf(meshName) != -1) {
-								mesh.material.lightmapTexture = currentLightmap;
-								mesh.material.lightmapTexture.coordinatesIndex = 1;
-								mesh.material.useLightmapAsShadowmap = true;
-							}
-						});
+			if (sceneID != null) {
+				BABYLON.SceneLoader.ImportMesh("", "./models/", "scene_" + sceneID + ".babylon", scene, function (newMeshes) {
+					newMeshes.forEach((mesh) => {
+						console.log(mesh.name);
+						console.log(mesh.position);
+						if (mesh.name.indexOf("Wall") > -1) {
+							mesh.translate(BABYLON.Axis.X, 5, BABYLON.Space.LOCAL);
+						}
 					});
 				});
+			}
+			else {
+				BABYLON.SceneLoader.ImportMesh("", "https://models.babylonjs.com/CornellBox/", "cornellBox.glb", scene, function (newMeshes) {
+					newMeshes[0].rotationQuaternion = null;
+					newMeshes[0].rotation.y = 0;
+					scene.getMaterialByName("light.000").emissiveColor = BABYLON.Color3.White();
 
-			});
+					/* lightmaps assignation */
+					// we have to cycles through objects to assign their lightmaps
+					const lightmappedMeshes = ["bloc.000", "suzanne.000", "cornellBox.000"];
+					lightmappedMeshes.forEach((meshName) => {
+						// lightmap texture creation
+						let currentLightmap = new BABYLON.Texture(
+							"https://models.babylonjs.com/CornellBox/" + meshName + ".lightmap.jpg",
+							scene,
+							null,
+							false);
+						currentLightmap.onLoadObservable.addOnce(function (tex) {
+							currentLightmap.name = meshName + "-lightmap";
+							newMeshes.forEach((mesh) => {
+								if (mesh.name.indexOf(meshName) != -1) {
+									mesh.material.lightmapTexture = currentLightmap;
+									mesh.material.lightmapTexture.coordinatesIndex = 1;
+									mesh.material.useLightmapAsShadowmap = true;
+								}
+							});
+						});
+					});
+
+				});
+			}
 
 			//LOAD AUDIO
 			var music = new BABYLON.Sound("music", "audio/music.mp3", scene, function () {
