@@ -60,6 +60,20 @@
 		var FinishSceneImport = function () {
 
 		}
+		// GET PALCEHOLDER
+		var GetPlaceholder = function (url) {
+			if (placeHolderTex == null) {
+				placeHolderTex = new BABYLON.Texture("./tex/placeHolder.png", scene);
+			}
+			placeHolderMat = new BABYLON.StandardMaterial("placeHolderMat", scene);
+			placeHolderMat.diffuseTexture = placeHolderTex;
+			placeHolderMat.speculartexture = placeHolderTex;
+			let specColorPwr = 0.5;
+			placeHolderMat.specularPower = 50;
+			placeHolderMat.specularColor = new BABYLON.Color3(specColorPwr, specColorPwr, specColorPwr);
+
+			return placeHolderMat;
+		}
 
 		//BJS
 		var canvas = document.getElementById("renderCanvas");
@@ -80,6 +94,9 @@
 		var logoFloatSpeed = 0.8;
 		var totalTime = 0.0;
 		var deltaTime = 0.0;
+		var placeHolderTex = null;
+		var placeHolderMat = null;
+		// var artsEmpty = [];
 
 
 		var createScene = async function (jsonData) {
@@ -135,36 +152,45 @@
 
 						//ARTS
 						if (mesh.name.indexOf(artName) > -1) {
-							let frame = mesh.clone();
-							frame.name = mesh.name.replace("Asset", "Frame");
-							mesh.translate(BABYLON.Axis.Y, 0.03, BABYLON.Space.LOCAL);
-
-							let i = parseInt(mesh.name.substring(6)) - 1;
-							let matArt = new BABYLON.StandardMaterial("matArt", scene);
-							let texArt = new BABYLON.Texture(jsonData[i].fileimage, scene, false, true, BABYLON.Texture.TRILINEAR_SAMPLINGMODE, function () {
-								var texSize = texArt.getSize();
-								if (texSize.width != 0) { //malformed returns
-									//Scaling ART & FRAME
-									mesh.scaling = new BABYLON.Vector3(1, 0.002, texSize.height / texSize.width);
-									frame.scaling = mesh.scaling;
-									frame.scaling = frame.scaling.multiply(frameScale);
-									frame.scaling.y = 0.02;
-								}
-							});
-							matArt.diffuseTexture = texArt;
-							matArt.speculartexture = texArt;
-							var specColorPwr = 0.5;
-							matArt.specularPower = 200;
-							matArt.specularColor = new BABYLON.Color3(specColorPwr, specColorPwr, specColorPwr);
-							mesh.material = matArt;
 
 							//FRAME
+							let frame = mesh.clone();
+							frame.name = mesh.name.replace("Asset", "Frame");
 							let matFrame = new BABYLON.StandardMaterial("matFrame", scene);
 							matFrame.diffuseColor = color2;
 							var specColorPwr = 0.3;
 							matFrame.specularPower = 500;
 							matFrame.specularColor = new BABYLON.Color3(specColorPwr, specColorPwr, specColorPwr);
 							frame.material = matFrame;
+
+							mesh.translate(BABYLON.Axis.Y, 0.03, BABYLON.Space.LOCAL);
+
+							let idx = parseInt(mesh.name.substring(6)) - 1;
+							if (idx < jsonData.length - 1) {
+
+								let matArt = new BABYLON.StandardMaterial("matArt", scene);
+								let texArt = new BABYLON.Texture(jsonData[idx].fileimage, scene, false, true, BABYLON.Texture.TRILINEAR_SAMPLINGMODE, function () {
+									var texSize = texArt.getSize();
+									if (texSize.width != 0) { //malformed returns
+										//Scaling ART & FRAME
+										mesh.scaling = new BABYLON.Vector3(1, 0.002, texSize.height / texSize.width);
+										frame.scaling = mesh.scaling;
+										frame.scaling = frame.scaling.multiply(frameScale);
+										frame.scaling.y = 0.02;
+									}
+								});
+								matArt.diffuseTexture = texArt;
+								matArt.speculartexture = texArt;
+								var specColorPwr = 0.5;
+								matArt.specularPower = 200;
+								matArt.specularColor = new BABYLON.Color3(specColorPwr, specColorPwr, specColorPwr);
+								mesh.material = matArt;
+							}
+							else {
+								frame.scaling = mesh.scaling;
+								frame.scaling = frame.scaling.multiply(frameScale);
+								mesh.material = GetPlaceholder();
+							}
 						}
 
 						//LOGO
