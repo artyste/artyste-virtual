@@ -84,10 +84,10 @@
 		var camera = null;
 		var sceneReady = false;
 		var waterMat = null;
-		var walkSpeed = 0.05;
-		var runSpeed = 0.3;
-		var walkSens = 15000;
-		var runSens = 5000;
+		var walkSpeed = 0.1;
+		var runSpeed = 0.4;
+		var walkSens = 12000;
+		var runSens = 4000;
 		var artName = "Asset_";
 		var logoFloat = null;
 		var logoSpeed = 0.2;
@@ -126,6 +126,9 @@
 			pLight.intensity = 0.5;
 			pLight.parent = camera;
 			pLight.position = new BABYLON.Vector3(0, 0, 0);
+
+			var refCube = BABYLON.Mesh.CreateBox("refCube", 1, scene);
+			refCube.position = new BABYLON.Vector3(0, 0, 0);
 
 
 			const galleryIdx = jsonData.length - 1;
@@ -246,27 +249,27 @@
 			//LOAD AUDIO
 			var music = new BABYLON.Sound("music", "audio/music.mp3", scene, function () {
 				console.log("music laoded!!");
-				music.setPosition(new BABYLON.Vector3(0, 0, 2));
+				music.setPosition(new BABYLON.Vector3(0, 2, 0));
 				music.play();
 			}, {
 				volume: 0.8,
 				loop: true,
-				// autoplay: true,
+				autoplay: true,
 				spatialSound: true,
 				distanceModel: "exponential",
 				rolloffFactor: 0.4
 			});
 			var chat = new BABYLON.Sound("chat", "audio/chat.mp3", scene, function () {
 				console.log("chat laoded!!");
-				chat.setPosition(new BABYLON.Vector3(0, 0, -4));
+				chat.setPosition(new BABYLON.Vector3(-10, 5, 0));
 				chat.play();
 			}, {
-				volume: 0.1,
+				volume: 0.5,
 				loop: true,
-				// autoplay: true,
+				autoplay: true,
 				spatialSound: true,
 				distanceModel: "exponential",
-				rolloffFactor: 1
+				rolloffFactor: 0.5
 			});
 
 			//GAMEPLAY
