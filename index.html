@@ -42,7 +42,7 @@
 		const queryString = window.location.search;
 		const urlParams = new URLSearchParams(queryString);
 		const gallery = urlParams.get('gallery');
-		const url = 'https://api.artyste.info/v1/gallery/' + gallery;
+		const url = 'https://api.artyste.info/v1/gallery/' + (gallery == null ? "starship" : gallery);
 
 		// JSON FETCH
 		var getJson = async function () {
