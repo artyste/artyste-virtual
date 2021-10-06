@@ -70,19 +70,28 @@
 		var camera = null;
 		var sceneReady = false;
 		var waterMat = null;
+		var walkSpeed = 0.05;
+		var runSpeed = 0.3;
+		var walkSens = 15000;
+		var runSens = 5000;
+		var artName = "Asset_";
+		var logoFloat = null;
+		var logoSpeed = 0.2;
+		var logoFloatSpeed = 0.8;
+		var totalTime = 0.0;
+		var deltaTime = 0.0;
 
 
 		var createScene = async function (jsonData) {
 
-			var scene = new BABYLON.Scene(engine);
+			scene = new BABYLON.Scene(engine);
 			scene.clearColor = BABYLON.Color3.Black();
-			// scene.debugLayer.show();
 
 			camera = new BABYLON.FreeCamera("camera", new BABYLON.Vector3(0, 1, -4), scene);
 			// camera.setTarget(BABYLON.Vector3.Zero());
 			camera.attachControl(false);
-			camera.angularSensibility = 15000;
-			camera.speed = 0.05;
+			camera.angularSensibility = walkSens;
+			camera.speed = walkSpeed;
 			camera.minZ = 0.01;
 			camera.keysUp = [38, 87];		//W
 			camera.keysLeft = [37, 65];	//A
@@ -93,8 +102,14 @@
 			const frameSize = 1.2;
 			const frameScale = new BABYLON.Vector3(frameSize, frameSize, frameSize);
 
-			var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, -1), scene);
-			light.intensity = 0.8;
+			//LIGHTS
+			var dirLight = new BABYLON.HemisphericLight("dirLight", new BABYLON.Vector3(0, 1, -1), scene);
+			dirLight.intensity = 0.5;
+			var pLight = new BABYLON.PointLight("pLight", new BABYLON.Vector3(1, 10, 1), scene);
+			pLight.intensity = 0.5;
+			pLight.parent = camera;
+			pLight.position = new BABYLON.Vector3(0, 0, 0);
+
 
 			const galleryIdx = jsonData.length - 1;
 			const color1 = jsonData[galleryIdx].gallery.color1 != null ? new BABYLON.Color3.FromHEXString(jsonData[galleryIdx].gallery.color1) : BABYLON.Color3.White();
@@ -102,80 +117,6 @@
 			const color3 = jsonData[galleryIdx].gallery.color3 != null ? new BABYLON.Color3.FromHEXString(jsonData[galleryIdx].gallery.color3) : BABYLON.Color3.White();
 
 			const virtID = jsonData[galleryIdx].gallery.virtual != null ? jsonData[galleryIdx].gallery.virtual : 1;
-
-			// LOAD ARTS
-			var arts = [];
-			for (let i = 0; i < jsonData.length; i++) {
-				if (i == jsonData.length - 1) { //gallery avatar&banner
-					console.log(jsonData[i].gallery.name);
-
-					const planeAvatar = BABYLON.MeshBuilder.CreatePlane("planeAvatar",
-						{ height: 2, width: 2 });
-					planeAvatar.position.x = 1;
-					planeAvatar.position.y = 1;
-					planeAvatar.position.z = 1.99;
-					var matAvatar = new BABYLON.StandardMaterial("matAvatar", scene);
-					var texAvatar = new BABYLON.Texture(jsonData[i].gallery.avatar, scene);
-					matAvatar.diffuseTexture = texAvatar;
-					matAvatar.speculartexture = texAvatar;
-					planeAvatar.material = matAvatar;
-
-					const planeBanner = BABYLON.MeshBuilder.CreatePlane("planeBanner",
-						{ height: 1, width: 4 });
-					planeBanner.position.x = 0;
-					planeBanner.position.y = 2.5;
-					planeBanner.position.z = 1.98;
-					var matBanner = new BABYLON.StandardMaterial("matBanner", scene);
-					var texBanner = new BABYLON.Texture(jsonData[i].gallery.banner, scene);
-					matBanner.diffuseTexture = texBanner;
-					matBanner.speculartexture = texBanner;
-					let specColorPwr = 1;
-					matBanner.specularPower = 50;
-					matBanner.specularColor = new BABYLON.Color3(specColorPwr, specColorPwr, specColorPwr);
-					planeBanner.material = matBanner;
-
-				}
-				else { //arts
-					console.log(jsonData[i].title);
-					// const planeArt = BABYLON.MeshBuilder.CreatePlane("planeArt",
-					// 	{ height: 0.8, width: 0.8 });
-					let planeArt = BABYLON.Mesh.CreateBox("planeArt", 1, scene);
-					planeArt.scaling = new BABYLON.Vector3(1, 1, 0.002);
-					planeArt.position.x = (i - (jsonData.length / 2)) * 1.5;
-					planeArt.position.y = 0.5;
-					planeArt.position.z = -0.5;
-					planeArt.rotation = new BABYLON.Vector3(0.45 * Math.PI / 2, 0, 0);
-					let frame = planeArt.clone();
-
-					let matArt = new BABYLON.StandardMaterial("matArt", scene);
-					let texArt = new BABYLON.Texture(jsonData[i].fileimage, scene, false, true, BABYLON.Texture.TRILINEAR_SAMPLINGMODE, function () {
-						var texSize = texArt.getSize();
-						if (texSize.width != 0) { //malformed returns
-							//Scaling ART & FRAME
-							planeArt.scaling = new BABYLON.Vector3(1, texSize.height / texSize.width, 0.002);
-							frame.scaling = planeArt.scaling;
-							frame.scaling = frame.scaling.multiply(frameScale);
-							frame.scaling.z = 0.02;
-						}
-					});
-					matArt.diffuseTexture = texArt;
-					matArt.speculartexture = texArt;
-					var specColorPwr = 0.5;
-					matArt.specularPower = 200;
-					matArt.specularColor = new BABYLON.Color3(specColorPwr, specColorPwr, specColorPwr);
-					planeArt.material = matArt;
-
-					//FRAME
-					frame.translate(BABYLON.Axis.Z, 10, BABYLON.Space.LOCAL);
-					let matFrame = new BABYLON.StandardMaterial("matFrame", scene);
-					matFrame.diffuseColor = color1;
-					var specColorPwr = 0.3;
-					matFrame.specularPower = 500;
-					matFrame.specularColor = new BABYLON.Color3(specColorPwr, specColorPwr, specColorPwr);
-					frame.material = matFrame;
-
-				}
-			}
 
 
 			//LOAD MODELS
@@ -192,19 +133,72 @@
 						// console.log(mesh.name);
 						// console.log(mesh.position);
 
-						// if (mesh.name.indexOf("Wall") > -1) {
-						// 	mesh.translate(BABYLON.Axis.X, 5, BABYLON.Space.LOCAL);
-						// }
+						//ARTS
+						if (mesh.name.indexOf(artName) > -1) {
+							let frame = mesh.clone();
+							frame.name = mesh.name.replace("Asset", "Frame");
+							mesh.translate(BABYLON.Axis.Y, 0.03, BABYLON.Space.LOCAL);
+
+							let i = parseInt(mesh.name.substring(6)) - 1;
+							let matArt = new BABYLON.StandardMaterial("matArt", scene);
+							let texArt = new BABYLON.Texture(jsonData[i].fileimage, scene, false, true, BABYLON.Texture.TRILINEAR_SAMPLINGMODE, function () {
+								var texSize = texArt.getSize();
+								if (texSize.width != 0) { //malformed returns
+									//Scaling ART & FRAME
+									mesh.scaling = new BABYLON.Vector3(1, 0.002, texSize.height / texSize.width);
+									frame.scaling = mesh.scaling;
+									frame.scaling = frame.scaling.multiply(frameScale);
+									frame.scaling.y = 0.02;
+								}
+							});
+							matArt.diffuseTexture = texArt;
+							matArt.speculartexture = texArt;
+							var specColorPwr = 0.5;
+							matArt.specularPower = 200;
+							matArt.specularColor = new BABYLON.Color3(specColorPwr, specColorPwr, specColorPwr);
+							mesh.material = matArt;
+
+							//FRAME
+							let matFrame = new BABYLON.StandardMaterial("matFrame", scene);
+							matFrame.diffuseColor = color2;
+							var specColorPwr = 0.3;
+							matFrame.specularPower = 500;
+							matFrame.specularColor = new BABYLON.Color3(specColorPwr, specColorPwr, specColorPwr);
+							frame.material = matFrame;
+						}
+
+						//LOGO
+						if (mesh.name.indexOf("GalleyLogo") > -1) {
+							var matLogo = new BABYLON.StandardMaterial("matLogo", scene);
+							var texLogo = new BABYLON.Texture(jsonData[jsonData.length - 1].gallery.avatar, scene);
+							matLogo.diffuseTexture = texLogo;
+							matLogo.speculartexture = texLogo;
+							mesh.material = matLogo;
+						}
+						//BANNER
+						if (mesh.name.indexOf("GalleyBanne") > -1) {
+							var matBanner = new BABYLON.StandardMaterial("matBanner", scene);
+							var texBanner = new BABYLON.Texture(jsonData[jsonData.length - 1].gallery.banner, scene);
+							matBanner.diffuseTexture = texBanner;
+							matBanner.speculartexture = texBanner;
+							mesh.material = matBanner;
+						}
+
+						if (mesh.name.indexOf("Logo_Float") > -1) {
+							logoFloat = mesh;
+						}
+
 						if (mesh.name.indexOf("glass") > -1) {
 
 						}
 						if (mesh.name.indexOf("aterFall") > -1) {
 							//WATER
-							
+
 							mesh.visibility = false;
 						}
 
 					});
+
 
 					// Skybox
 					var skybox = BABYLON.Mesh.CreateBox("skyBox", 1000.0, scene);
@@ -221,36 +215,6 @@
 					FinishSceneImport();
 				});
 
-			}
-			else {
-				BABYLON.SceneLoader.ImportMesh("", "https://models.babylonjs.com/CornellBox/", "cornellBox.glb", scene, function (newMeshes) {
-					newMeshes[0].rotationQuaternion = null;
-					newMeshes[0].rotation.y = 0;
-					scene.getMaterialByName("light.000").emissiveColor = BABYLON.Color3.White();
-
-					/* lightmaps assignation */
-					// we have to cycles through objects to assign their lightmaps
-					const lightmappedMeshes = ["bloc.000", "suzanne.000", "cornellBox.000"];
-					lightmappedMeshes.forEach((meshName) => {
-						// lightmap texture creation
-						let currentLightmap = new BABYLON.Texture(
-							"https://models.babylonjs.com/CornellBox/" + meshName + ".lightmap.jpg",
-							scene,
-							null,
-							false);
-						currentLightmap.onLoadObservable.addOnce(function (tex) {
-							currentLightmap.name = meshName + "-lightmap";
-							newMeshes.forEach((mesh) => {
-								if (mesh.name.indexOf(meshName) != -1) {
-									mesh.material.lightmapTexture = currentLightmap;
-									mesh.material.lightmapTexture.coordinatesIndex = 1;
-									mesh.material.useLightmapAsShadowmap = true;
-								}
-							});
-						});
-					});
-
-				});
 			}
 
 			//LOAD AUDIO
@@ -287,12 +251,26 @@
 						switch (kbInfo.event.keyCode) {
 							case 87: //W: Move OBJECT towards, NOT camera. TODO: create character RIG
 								break;
+							case 16:
+								camera.speed = runSpeed;
+								camera.angularSensibility = runSens;
+								break;
+							case 119:
+								scene.debugLayer.show();
+								break;
+							case 120:
+								scene.debugLayer.hide();
+								break;
 						}
 						break;
 					case BABYLON.KeyboardEventTypes.KEYUP:
 						console.log("KEY UP: ", kbInfo.event.keyCode);
 						switch (kbInfo.event.keyCode) {
 							case 87: //W: Move OBJECT towards, NOT camera. TODO: create character RIG
+								break;
+							case 16:
+								camera.speed = walkSpeed;
+								camera.angularSensibility = walkSens;
 								break;
 						}
 						break;
@@ -349,7 +327,15 @@
 			sceneToRender = scene
 			engine.runRenderLoop(function () {
 				if (sceneToRender && sceneToRender.activeCamera) {
+					deltaTime = engine.getDeltaTime() * 0.001;
+					totalTime += deltaTime;
 					camera.position.y = 1.8;
+
+					if (logoFloat != null) {
+						logoFloat.rotate(BABYLON.Axis.Y, Math.PI * deltaTime * logoSpeed, BABYLON.Space.WORLD);
+						logoFloat.position = new BABYLON.Vector3(logoFloat.position.x, 3 + Math.sin(totalTime * logoFloatSpeed) * 0.5, logoFloat.position.z);
+					}
+
 
 					sceneToRender.render();
 				}
