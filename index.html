@@ -59,11 +59,6 @@
 		// FINISH SCENE IMPORT
 		var FinishSceneImport = function () {
 
-			for (let i = 0; i < refractMeshes.length; i++) {
-				const element = refractMeshes[i];
-				waterMat.addToRenderList(element);
-				console.log(element.name);
-			}
 		}
 
 		//BJS
@@ -75,7 +70,6 @@
 		var camera = null;
 		var sceneReady = false;
 		var waterMat = null;
-		var refractMeshes = [];
 
 
 		var createScene = async function (jsonData) {
@@ -88,7 +82,7 @@
 			// camera.setTarget(BABYLON.Vector3.Zero());
 			camera.attachControl(false);
 			camera.angularSensibility = 15000;
-			camera.speed = 0.5;
+			camera.speed = 0.05;
 			camera.minZ = 0.01;
 			camera.keysUp = [38, 87];		//W
 			camera.keysLeft = [37, 65];	//A
@@ -152,8 +146,6 @@
 					planeArt.position.z = -0.5;
 					planeArt.rotation = new BABYLON.Vector3(0.45 * Math.PI / 2, 0, 0);
 					let frame = planeArt.clone();
-					refractMeshes.push(planeArt);
-					refractMeshes.push(frame);
 
 					let matArt = new BABYLON.StandardMaterial("matArt", scene);
 					let texArt = new BABYLON.Texture(jsonData[i].fileimage, scene, false, true, BABYLON.Texture.TRILINEAR_SAMPLINGMODE, function () {
@@ -207,47 +199,12 @@
 
 						}
 						if (mesh.name.indexOf("aterFall") > -1) {
-							waterMat = waterMat != null ? waterMat : new BABYLON.WaterMaterial("water", scene, new BABYLON.Vector2(1024, 1024));
-							waterMat.backFaceCulling = false;
-							waterMat.bumpTexture = new BABYLON.Texture("./tex/waterbump.png", scene);
-							waterMat.windForce = -5;
-							waterMat.waveHeight = 0.5;
-							waterMat.bumpHeight = 0.1;
-							waterMat.waveLength = 0.1;
-							waterMat.colorBlendFactor = 0;
-							// waterMat.addToRenderList(newMeshes);
-							// waterMat.addToRenderList(ground);
-							// mesh.material = waterMat;
-
+							//WATER
+							
 							mesh.visibility = false;
 						}
-						else {
-							refractMeshes.push(mesh);
-							if (mesh.name.indexOf("Logo_Float") > -1) {
-								refractMeshes.push(mesh);
-							}
-						}
-
-						// mesh.material = waterMat;
 
 					});
-
-					var planeWater = BABYLON.Mesh.CreateGround("waterMesh", 512, 512, 32, scene, false);
-					planeWater.position.x = 0;
-					planeWater.position.y = -5;
-					// planeWater.position.z = -2;
-					// planeWater.rotation = new BABYLON.Vector3(0.90 * Math.PI / 2, 0, 0);
-					planeWater.material = waterMat;
-
-					var planeGround = BABYLON.Mesh.CreateGround("groundMesh", 512, 512, 32, scene, false);
-					planeGround.position.x = 0;
-					planeGround.position.y = -6;
-					var groundTexture = new BABYLON.Texture("https://playground.babylonjs.com/textures/sand.jpg", scene);
-					groundTexture.vScale = groundTexture.uScale = 4.0;
-					var groundMaterial = new BABYLON.StandardMaterial("groundMaterial", scene);
-					groundMaterial.diffuseTexture = groundTexture;
-					planeGround.material = groundMaterial;
-					refractMeshes.push(planeGround);
 
 					// Skybox
 					var skybox = BABYLON.Mesh.CreateBox("skyBox", 1000.0, scene);
@@ -260,7 +217,6 @@
 					skyboxMaterial.disableLighting = true;
 					skybox.material = skyboxMaterial;
 
-					refractMeshes.push(skybox);
 
 					FinishSceneImport();
 				});
