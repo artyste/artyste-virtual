@@ -98,6 +98,11 @@
 		var placeHolderMat = null;
 		// var artsEmpty = [];
 
+		const doorDist = 2;
+		var wallGlass = null;
+		var wallL = null;
+		var wallR = null;
+
 
 		var createScene = async function (jsonData) {
 
@@ -107,6 +112,7 @@
 
 
 			camera = new BABYLON.FreeCamera("camera", new BABYLON.Vector3(0, 1, -4), scene);
+			camera.fov = 1;
 			// camera.setTarget(BABYLON.Vector3.Zero());
 			camera.attachControl(false);
 			camera.angularSensibility = walkSens;
@@ -239,6 +245,22 @@
 							mat.ambientColor = BABYLON.Color3.White();
 							// mat.specularColor = BABYLON.Color3.White();
 							mesh.material = mat;
+						}
+						//DOORS
+						if (mesh.name.indexOf("Wall_Glass") > -1) {
+							wallGlass = mesh;
+						}
+						if (mesh.name.indexOf("Door_Glass_01_L") > -1) {
+							wallL = mesh;
+						}
+						if (mesh.name.indexOf("Door_Glass_01_R") > -1) {
+							wallR = mesh;
+						}
+
+
+						if (mesh.name.indexOf("Start") > -1) {
+							mesh.translate(BABYLON.Axis.Z, -4, BABYLON.Space.LOCAL);
+							camera.position = mesh.position;
 						}
 
 					});
@@ -380,6 +402,17 @@
 						logoFloat.position = new BABYLON.Vector3(logoFloat.position.x, 3 + Math.sin(totalTime * logoFloatSpeed) * 0.5, logoFloat.position.z);
 					}
 
+					//WALLS
+					if (wallL != null && wallR != null && wallGlass != null) {
+						wallL.position = new BABYLON.Vector3(
+							-doorDist + BABYLON.Scalar.Clamp((BABYLON.Vector3.Distance(camera.position, wallGlass.position) - 4), 0, doorDist),
+							wallL.position.y,
+							wallL.position.z);
+						wallR.position = new BABYLON.Vector3(
+							-wallL.position.x,
+							wallR.position.y,
+							wallR.position.z);
+					}
 
 					sceneToRender.render();
 				}
