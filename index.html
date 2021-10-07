@@ -103,6 +103,8 @@
 
 			scene = new BABYLON.Scene(engine);
 			scene.clearColor = BABYLON.Color3.Black();
+			scene.ambientColor = BABYLON.Color3.White();
+
 
 			camera = new BABYLON.FreeCamera("camera", new BABYLON.Vector3(0, 1, -4), scene);
 			// camera.setTarget(BABYLON.Vector3.Zero());
@@ -212,7 +214,7 @@
 							matBanner.speculartexture = texBanner;
 							mesh.material = matBanner;
 						}
-
+						//LOGO3D
 						if (mesh.name.indexOf("Logo_Float") > -1) {
 							logoFloat = mesh;
 						}
@@ -225,6 +227,17 @@
 
 							mesh.visibility = false;
 						}
+						//Wall_Master Lightmaps
+						if (mesh.name.indexOf("Wall_Master") > -1) {
+							let mat = new BABYLON.StandardMaterial("mat_Wall_Master", scene);
+							let tex = new BABYLON.Texture("./models/Wall_Master_Difuse.jpg", scene);
+							mat.lightmapTexture = tex;
+							mat.lightmapTexture.coordinatesIndex = 0;
+							mat.useLightmapAsShadowmap = true;
+							mat.ambientColor = BABYLON.Color3.White();
+							// mat.specularColor = BABYLON.Color3.White();
+							mesh.material = mat;
+						}
 
 					});
 
@@ -235,8 +248,8 @@
 					skyboxMaterial.backFaceCulling = false;
 					skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("https://playground.babylonjs.com/textures/TropicalSunnyDay", scene);
 					skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
-					skyboxMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
-					skyboxMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
+					skyboxMaterial.diffuseColor = new BABYLON.Color3.Black();
+					skyboxMaterial.specularColor = new BABYLON.Color3.Black();
 					skyboxMaterial.disableLighting = true;
 					skybox.material = skyboxMaterial;
 
