@@ -109,10 +109,15 @@
 			scene = new BABYLON.Scene(engine);
 			scene.clearColor = BABYLON.Color3.Black();
 			scene.ambientColor = BABYLON.Color3.White();
+			scene.collisionsEnabled = true;
+			scene.gravity = new BABYLON.Vector3(0, -0.15, 0);
 
 
 			camera = new BABYLON.FreeCamera("camera", new BABYLON.Vector3(0, 1, -4), scene);
 			camera.fov = 1;
+			camera.checkCollisions = true;
+			camera.applyGravity = true;
+
 			// camera.setTarget(BABYLON.Vector3.Zero());
 			camera.attachControl(false);
 			camera.angularSensibility = walkSens;
@@ -232,9 +237,11 @@
 						}
 						if (mesh.name.indexOf("aterFall") > -1) {
 							//WATER
-
 							mesh.visibility = false;
+							mesh.checkCollisions = true;
 						}
+
+						//WALLS + SCENE
 						//Wall_Master Lightmaps
 						if (mesh.name.indexOf("Wall_Master") > -1) {
 							let mat = new BABYLON.StandardMaterial("mat_Wall_Master", scene);
@@ -245,10 +252,18 @@
 							mat.ambientColor = BABYLON.Color3.White();
 							// mat.specularColor = BABYLON.Color3.White();
 							mesh.material = mat;
+
+							mesh.checkCollisions = true;
 						}
+						if (mesh.name.indexOf("Wall_0") > -1) {
+							mesh.checkCollisions = true;
+						}
+
 						//DOORS
 						if (mesh.name.indexOf("Wall_Glass") > -1) {
 							wallGlass = mesh;
+							mesh.checkCollisions = true;
+
 						}
 						if (mesh.name.indexOf("Door_Glass_01_L") > -1) {
 							wallL = mesh;
@@ -395,7 +410,7 @@
 				if (sceneToRender && sceneToRender.activeCamera) {
 					deltaTime = engine.getDeltaTime() * 0.001;
 					totalTime += deltaTime;
-					camera.position.y = 1.8;
+					// camera.position.y = 1.8;
 
 					if (logoFloat != null) {
 						logoFloat.rotate(BABYLON.Axis.Y, Math.PI * deltaTime * logoSpeed, BABYLON.Space.WORLD);
