@@ -82,6 +82,7 @@
 		var sceneToRender = null;
 		var createDefaultEngine = function () { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, disableWebGL2Support: false }); };
 		var camera = null;
+		var camHeight = 1.8;
 		var sceneReady = false;
 		var waterMat = null;
 		var walkSpeed = 0.1;
@@ -117,6 +118,7 @@
 			camera.fov = 1;
 			camera.checkCollisions = true;
 			camera.applyGravity = true;
+			camera.ellipsoid = new BABYLON.Vector3(0.4, camHeight / 2, 0.4);
 
 			// camera.setTarget(BABYLON.Vector3.Zero());
 			camera.attachControl(false);
@@ -274,6 +276,7 @@
 
 
 						if (mesh.name.indexOf("Start") > -1) {
+							mesh.position = new BABYLON.Vector3(mesh.position.x, camHeight, mesh.position.z);
 							mesh.translate(BABYLON.Axis.Z, -4, BABYLON.Space.LOCAL);
 							camera.position = mesh.position;
 						}
@@ -428,6 +431,9 @@
 							wallR.position.y,
 							wallR.position.z);
 					}
+
+
+					// console.log(camera.position.y)
 
 					sceneToRender.render();
 				}
