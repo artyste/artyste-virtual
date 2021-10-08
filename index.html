@@ -106,6 +106,11 @@
 
 		var renderTarget;
 
+		var mirrorMaterial = null;
+		var mirrorMeshes = [];
+		var fumeMat = null;
+		var doorMat = null;
+
 
 		var createScene = async function (jsonData) {
 
@@ -135,6 +140,12 @@
 			// camera.keysRotateRight = [39];	//R
 			const frameSize = 1.2;
 			const frameScale = new BABYLON.Vector3(frameSize, frameSize, frameSize);
+
+
+			mirrorMaterial = new BABYLON.StandardMaterial("mirror", scene);
+			mirrorMaterial.reflectionTexture = new BABYLON.MirrorTexture("mirror", 1024, scene, true);
+			// mirrorMaterial.reflectionTexture.mirrorPlane = reflector;
+			mirrorMaterial.reflectionTexture.level = 1;
 
 			//LIGHTS
 			var dirLight = new BABYLON.HemisphericLight("dirLight", new BABYLON.Vector3(0, 1, 0), scene);
@@ -171,6 +182,7 @@
 					newMeshes.forEach((mesh) => {
 						// console.log(mesh.name);
 						// console.log(mesh.position);
+						mirrorMeshes.push(mesh);
 
 						//ARTS
 						if (mesh.name.indexOf(artName) > -1) {
@@ -178,6 +190,7 @@
 							//FRAME
 							let frame = mesh.clone();
 							renderTarget.renderList.push(frame);
+							mirrorMeshes.push(frame);
 							frame.name = mesh.name.replace("Asset", "Frame");
 							let matFrame = new BABYLON.StandardMaterial("matFrame", scene);
 							matFrame.diffuseColor = color2;
@@ -214,7 +227,6 @@
 								frame.scaling = frame.scaling.multiply(frameScale);
 								mesh.material = GetPlaceholder();
 							}
-							renderTarget.renderList.push(mesh);
 						}
 
 						//LOGO
@@ -224,7 +236,6 @@
 							matLogo.diffuseTexture = texLogo;
 							matLogo.speculartexture = texLogo;
 							mesh.material = matLogo;
-							renderTarget.renderList.push(mesh);
 						}
 						//BANNER
 						if (mesh.name.indexOf("GalleyBanne") > -1) {
@@ -237,7 +248,6 @@
 						//LOGO3D
 						if (mesh.name.indexOf("Logo_Float") > -1) {
 							logoFloat = mesh;
-							renderTarget.renderList.push(mesh);
 						}
 
 						if (mesh.name.indexOf("glass") > -1) {
@@ -267,33 +277,49 @@
 							mesh.material = mat;
 
 							mesh.checkCollisions = true;
-							renderTarget.renderList.push(mesh);
 						}
 						if (mesh.name.indexOf("Wall_0") > -1) {
 							mesh.checkCollisions = true;
-							renderTarget.renderList.push(mesh);
 						}
 
 						//DOORS
 						if (mesh.name.indexOf("Wall_Glass") > -1) {
 							wallGlass = mesh;
 							mesh.checkCollisions = true;
+							// ApplyGlassMaterial(mesh);
+							mesh.material = fumeMat;
+							mesh.alphaIndex = 1001;
+
 
 						}
 						if (mesh.name.indexOf("Door_Glass_01_L") > -1) {
 							wallL = mesh;
+							mesh.material = doorMat;
+
 						}
 						if (mesh.name.indexOf("Door_Glass_01_R") > -1) {
 							wallR = mesh;
+							mesh.material = doorMat;
+							// console.log(mesh.alphaIndex);
+							// mesh.alphaIndex = 999;
 						}
 
 
 						if (mesh.name.indexOf("Start") > -1) {
 							mesh.position = new BABYLON.Vector3(mesh.position.x, camHeight, mesh.position.z);
-							mesh.translate(BABYLON.Axis.Z, -0, BABYLON.Space.LOCAL);
+							mesh.translate(BABYLON.Axis.Z, -4, BABYLON.Space.LOCAL);
 							camera.position = mesh.position;
 						}
 
+
+						//ALL MESHES
+						if (mesh.name.indexOf("aterFall") < 0) {
+							renderTarget.renderList.push(mesh);
+						}
+
+						if (mesh.name.indexOf("Wall_Glass") < 0 && mesh.name.indexOf("Door_Glass_01_L") < 0 && mesh.name.indexOf("Door_Glass_01_R") < 0) {
+							// mirrorMaterial.reflectionTexture.renderList.push(mesh);
+						}
 					});
 
 
@@ -308,6 +334,50 @@
 					skyboxMaterial.disableLighting = true;
 					skybox.material = skyboxMaterial;
 					renderTarget.renderList.push(skybox);
+
+
+
+
+
+
+					//Creation of a glass planes
+					var smokeMirror = BABYLON.MeshBuilder.CreatePlane("smokeMirror", { width: 20, height: 20 }, scene);
+					smokeMirror.position = new BABYLON.Vector3(23, 6.4, 10);
+					smokeMirror.rotation = new BABYLON.Vector3(270 / 180 * Math.PI, 0, 60 / 180 * Math.PI);
+
+					//Ensure working with new values for smokeMirror by computing and obtaining its worldMatrix
+					smokeMirror.computeWorldMatrix(true);
+					var smokeMirror_worldMatrix = smokeMirror.getWorldMatrix();
+
+					//Obtain normals for plane and assign one of them as the normal
+					var smokeMirror_vertexData = smokeMirror.getVerticesData("normal");
+					var smokeMirrorNormal = new BABYLON.Vector3(smokeMirror_vertexData[0], smokeMirror_vertexData[1], smokeMirror_vertexData[2]);
+					//Use worldMatrix to transform normal into its current value
+					smokeMirrorNormal = new BABYLON.Vector3.TransformNormal(smokeMirrorNormal, smokeMirror_worldMatrix)
+
+					//Create reflecting surface for smokeMirror surface
+					var reflector = new BABYLON.Plane.FromPositionAndNormal(smokeMirror.position, smokeMirrorNormal.scale(-1));
+
+					//Create the smokeMirror material
+					var smokeMirrorMaterial = new BABYLON.StandardMaterial("smokeMirror", scene);
+					smokeMirrorMaterial.reflectionTexture = new BABYLON.MirrorTexture("smokeMirror", 1024, scene, true);
+					smokeMirrorMaterial.reflectionTexture.mirrorPlane = reflector;
+					for (let index = 0; index < mirrorMeshes.length; index++) {
+						const element = mirrorMeshes[index];
+						smokeMirrorMaterial.reflectionTexture.renderList.push(element);
+						// console.log(index);
+					}
+					smokeMirrorMaterial.reflectionTexture.level = 0.15;
+					smokeMirrorMaterial.diffuseColor = BABYLON.Color3.Black();
+
+					smokeMirror.material = smokeMirrorMaterial;
+
+
+
+
+
+
+
 
 
 					FinishSceneImport();
@@ -376,16 +446,11 @@
 			});
 
 
-
-
 			//WebXR (needs https SSL/certificate to work properly)
 			// const env = scene.createDefaultEnvironment();
 			const xr = await scene.createDefaultXRExperienceAsync({
 				floorMeshes: [ground]
 			});
-
-
-
 
 
 			//OLD
@@ -396,12 +461,7 @@
 			// xSpeed -= brakeSpeed * engine.getDeltaTime();
 			// zSpeed -= brakeSpeed * engine.getDeltaTime();
 
-
-
-
-
-
-			//SHADERS
+			//SHADERS & MATERIALS
 			BABYLON.Effect.ShadersStore["waterVertexShader"] = `   
 				precision highp float;
 
@@ -488,22 +548,37 @@
 					uniforms: ["world", "worldView", "worldViewProjection", "view", "projection, time"],
 					needAlphaBlending: true,
 				});
-
 			renderTarget = new BABYLON.RenderTargetTexture("scene", 1024, scene, true);
 			renderTarget.lodGenerationScale = 0.5;
 			renderTarget.depth = 0.5;
 			renderTarget.wrapU = 2;
 			renderTarget.wrapV = 2;
 			scene.customRenderTargets.push(renderTarget);
-
-
 			waterMat.setTexture("texTarget", renderTarget);
 			waterMat.setTexture("texNormal", new BABYLON.Texture("./tex/waterbump.png", scene));
 
 
-			// var plane = BABYLON.Mesh.CreateBox("plane", 3, scene);
-			// plane.position = new BABYLON.Vector3(0, 2, -2);
-			// plane.material = waterMat;
+			fumeMat = new BABYLON.StandardMaterial("fumeMat", scene);
+			fumeMat.diffuseColor = BABYLON.Color3.Black();
+			var specColorPwr = 0.2;
+			fumeMat.specularPower = 500;
+			fumeMat.specularColor = new BABYLON.Color3(specColorPwr, specColorPwr, specColorPwr);
+			fumeMat.alpha = 0.9;
+
+			doorMat = new BABYLON.StandardMaterial("doorMat", scene);
+			doorMat.diffuseColor = new BABYLON.Color3(0.4, 0.4, 0.0);
+			var specColorPwr = 1;
+			doorMat.specularPower = 500;
+			doorMat.specularColor = new BABYLON.Color3(specColorPwr, specColorPwr, specColorPwr);
+			doorMat.alpha = 0.6;
+
+
+
+
+
+
+
+
 
 
 			return scene;
