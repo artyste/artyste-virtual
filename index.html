@@ -104,6 +104,8 @@
 		var wallL = null;
 		var wallR = null;
 
+		var renderTarget;
+
 
 		var createScene = async function (jsonData) {
 
@@ -175,6 +177,7 @@
 
 							//FRAME
 							let frame = mesh.clone();
+							renderTarget.renderList.push(frame);
 							frame.name = mesh.name.replace("Asset", "Frame");
 							let matFrame = new BABYLON.StandardMaterial("matFrame", scene);
 							matFrame.diffuseColor = color2;
@@ -211,6 +214,7 @@
 								frame.scaling = frame.scaling.multiply(frameScale);
 								mesh.material = GetPlaceholder();
 							}
+							renderTarget.renderList.push(mesh);
 						}
 
 						//LOGO
@@ -220,6 +224,7 @@
 							matLogo.diffuseTexture = texLogo;
 							matLogo.speculartexture = texLogo;
 							mesh.material = matLogo;
+							renderTarget.renderList.push(mesh);
 						}
 						//BANNER
 						if (mesh.name.indexOf("GalleyBanne") > -1) {
@@ -232,6 +237,7 @@
 						//LOGO3D
 						if (mesh.name.indexOf("Logo_Float") > -1) {
 							logoFloat = mesh;
+							renderTarget.renderList.push(mesh);
 						}
 
 						if (mesh.name.indexOf("glass") > -1) {
@@ -239,8 +245,13 @@
 						}
 						if (mesh.name.indexOf("aterFall") > -1) {
 							//WATER
-							mesh.visibility = false;
-							mesh.checkCollisions = true;
+							// mesh.visibility = false;
+							// mesh.checkCollisions = true;
+							mesh.material = waterMat;
+							var waterClone = mesh.clone();
+							waterClone.scaling = new BABYLON.Vector3(2, 2, 2);
+							waterClone.checkCollisions = true;
+							waterClone.visibility = false;
 						}
 
 						//WALLS + SCENE
@@ -256,9 +267,11 @@
 							mesh.material = mat;
 
 							mesh.checkCollisions = true;
+							renderTarget.renderList.push(mesh);
 						}
 						if (mesh.name.indexOf("Wall_0") > -1) {
 							mesh.checkCollisions = true;
+							renderTarget.renderList.push(mesh);
 						}
 
 						//DOORS
@@ -277,7 +290,7 @@
 
 						if (mesh.name.indexOf("Start") > -1) {
 							mesh.position = new BABYLON.Vector3(mesh.position.x, camHeight, mesh.position.z);
-							mesh.translate(BABYLON.Axis.Z, -4, BABYLON.Space.LOCAL);
+							mesh.translate(BABYLON.Axis.Z, -0, BABYLON.Space.LOCAL);
 							camera.position = mesh.position;
 						}
 
@@ -294,6 +307,7 @@
 					skyboxMaterial.specularColor = new BABYLON.Color3.Black();
 					skyboxMaterial.disableLighting = true;
 					skybox.material = skyboxMaterial;
+					renderTarget.renderList.push(skybox);
 
 
 					FinishSceneImport();
@@ -384,6 +398,114 @@
 
 
 
+
+
+
+			//SHADERS
+			BABYLON.Effect.ShadersStore["waterVertexShader"] = `   
+				precision highp float;
+
+				attribute vec3 position;
+				attribute vec3 normal;
+				attribute vec2 uv;
+				
+				uniform mat4 world;
+				uniform mat4 worldView;
+				uniform mat4 worldViewProjection;
+				uniform mat4 view;
+				uniform mat4 projection;
+				uniform float time;
+
+				varying vec2 vUV;
+				varying vec2 vSP;
+
+				void main(void) {
+
+					// vec4 posW = dModelMatrix * vec4(localPos, 1.0);
+					vec4 posW = worldViewProjection * vec4(position, 1.0);
+					
+					// posW.zw = vec2(0.0, 1.0);
+					
+
+
+					vec4 screenPos;
+					
+						screenPos = vec4(uv.xy * 2.0 - 1.0, 0.5, 1);
+									
+						screenPos = view * posW;
+					
+
+
+					vec3 p = position;
+					// p.x = p.x + sin(2.0 * position.y + time*5.);
+					// p.y = p.y + sin(time*5. + 4.0);
+
+					gl_Position = worldViewProjection * vec4(p, 1.0);
+					
+					vec3 ndc = gl_Position.xyz / gl_Position.w;
+					vec2 viewportCoord = ndc.xy * 0.5 + 0.5; //ndc is -1 to 1 in GL. scale for 0 to 1
+					vec2 viewportPixelCoord = viewportCoord * vec2(1, 1);
+					
+					vUV = uv;
+					vSP = viewportPixelCoord;
+				}`;
+
+			BABYLON.Effect.ShadersStore["waterFragmentShader"] = `
+				precision highp float;
+				
+				uniform sampler2D texTarget;
+				uniform sampler2D texNormal;
+				uniform float time;
+				uniform mat4 world;
+				uniform mat4 worldView;
+				uniform mat4 worldViewProjection;
+				uniform mat4 view;
+				uniform mat4 projection;
+
+				varying vec2 vUV;
+				varying vec2 vSP;
+
+				void main(void) {
+					vec2 vSP = vSP;
+					vec4 normTex = texture2D(texNormal, vec2(5.*vUV.x, 1.*vUV.y+time*0.5));
+					// vSP.y += time*2.;
+					vSP.x += (normTex.x-0.5) *0.1;
+					vSP.y += (normTex.y-0.5) *0.1;
+					// vSP.x += texture2D(texNormal, vSP).x;
+					gl_FragColor = texture2D(texTarget, vSP);
+					// gl_FragColor.z = 1.0 - gl_FragColor.z;
+					gl_FragColor.a = 1.0;
+					gl_FragColor.g += 0.05;
+					gl_FragColor.b += 0.15;
+    		}`;
+
+			waterMat = new BABYLON.ShaderMaterial("shader", scene, {
+				vertex: "water",
+				fragment: "water",
+			},
+				{
+					attributes: ["position", "normal", "uv"],
+					uniforms: ["world", "worldView", "worldViewProjection", "view", "projection, time"],
+					needAlphaBlending: true,
+				});
+
+			renderTarget = new BABYLON.RenderTargetTexture("scene", 1024, scene, true);
+			renderTarget.lodGenerationScale = 0.5;
+			renderTarget.depth = 0.5;
+			renderTarget.wrapU = 2;
+			renderTarget.wrapV = 2;
+			scene.customRenderTargets.push(renderTarget);
+
+
+			waterMat.setTexture("texTarget", renderTarget);
+			waterMat.setTexture("texNormal", new BABYLON.Texture("./tex/waterbump.png", scene));
+
+
+			// var plane = BABYLON.Mesh.CreateBox("plane", 3, scene);
+			// plane.position = new BABYLON.Vector3(0, 2, -2);
+			// plane.material = waterMat;
+
+
 			return scene;
 
 		};
@@ -431,6 +553,9 @@
 							wallR.position.y,
 							wallR.position.z);
 					}
+
+
+					waterMat.setFloat("time", totalTime);
 
 
 					// console.log(camera.position.y)
