@@ -20,6 +20,7 @@
 	<script src="./bjs/babylonjs.serializers.min.js"></script>
 	<script src="./bjs/babylon.gui.min.js"></script>
 	<script src="./bjs/babylon.inspector.bundle.js"></script>
+	<script src="./bjs/shaderbuilder.js"></script>
 
 	<style>
 		html,
@@ -80,6 +81,53 @@
 			return placeHolderMat;
 		}
 
+		// CREATE SB MATERIAL
+		var CreateSBMaterial = function (idx) {
+			return new SB()
+
+				.Map({ path: './tex/hdri.jpg' })
+				// enviroment map in txtRef_0 sampler
+				//https://i.imgur.com/4LudcMp.jpg normal map
+				.InLine(`vec3 new_nrm =nrm; 
+
+vec3 color1 = vec3(1.,1.,0. );
+vec3 color2 =   vec3(`+ logoColors[idx] + `);
+
+vec3 ns_pos = pos;
+
+ float ns  = noise(r_y(pos*200.,camera.y*0.1+1.1,vec3(0.)))*0.2+0.2 ;
+float ns2  = noise(r_y(pos*400.,camera.x*0.1+1.1,vec3(0.)))*0.82 ;
+
+float height_map = 0.; 
+vec3 diff = vec3(1.)*(ns*0.1+0.9); 
+
+float roughness = (0.5+ns*0.5)*9.- (noise(pos*0.1)*0.5 )*5. ; 
+
+float metallic = 1.-ns ; 
+float fs =  min(1.,max(0., pow(dot(normalize(camera-pos),new_nrm),1.)*1.));`)
+
+				.InLine(reflectPart(
+					'txtRef_0', 'new_nrm'
+					, '0.01+ns', -1, -1., -1., -1., '  roughness '))
+				.InLine('vec3 ref1 = result.xyz;')
+				.InLine(reflectPart(
+					'txtRef_0', 'new_nrm'
+					, '0.01+ns', 1, 1., 1., 1., '  roughness '))
+				.InLine('vec3 ref2 = result.xyz;')
+				.InLine('float specular  =  min(1.,max(0.,4.*pow(length(result.xyz)/3.,5.)*13.5+pow(length(result.xyz)/2.,0.5)*0.3));')
+
+				.InLine('result = vec4((1.-metallic)*diff + metallic*ref2,1.);')
+				.InLine('result = vec4( ns2*5.*color1+  (ns*2.+0.8)*(ref2*length(ref2)*0.5+length(ref2)*0.5)-ns2*3.*vec3(1.)  ,1.);')
+				.InLine(`
+
+	result.xyz  = (result.xyz*0.1+ns*0.3*color1 +0.6) *smoothstep(0.,3.,3.-ns2);
+result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos(ns*3.25)*0.6+sin(15.*ns*123.325)*0.6,sin(ns*23.21)*0.2+cos(ns)*0.8,cos(ns))*ns2*ns,result.xyz)-(1.-fs)*0.3;
+`)
+				.Effect({ pr: 'pow(pr,2.)*1.5+pow(pr,0.5)*0.25+ns2*pz*0.3' })
+				.BuildMaterial(scene);
+
+		}
+
 		//BJS
 		var canvas = document.getElementById("renderCanvas");
 		var engine = null;
@@ -115,6 +163,30 @@
 		var mirrorMeshes = [];
 		var fumeMat = null;
 		var doorMat = null;
+
+		var time = 0;
+		var SB = BABYLONX.ShaderBuilder;
+		var SBP = BABYLONX.Shader.Print;
+		BABYLONX.ShaderBuilder.InitializeEngine();
+		var ik = 0;
+		var logoColors = [
+			'0.654, 0.415, 0.674', //purple
+			'0.462, 0.741, 0.737', //cyan
+			'0.670, 0.862, 0.835', //cyanL
+			'0.988, 0.709, 0.337', //yellowD
+			'0.996, 0.909, 0.490', //yellow
+			'0.992, 0.964, 0.670', //yellowL
+		];
+		var reflectPart = function (ref, nrm, scale, brk, x, y, z, bias) {
+			ik++;
+			return 'vec3 new_nrm' + ik + ' = ' + nrm + ';\
+					vec3 vr'+ ik + ' = normalize( refract(  normalize(camera -pos*3.141592*length(camera- pos)*' + SBP(scale)
+				+ ')  ,  new_nrm' + ik + ', ' + SBP(brk) + ') ); \
+					float y'+ ik + '= .5+  - atan( ' + SBP(z) + '*vr' + ik + '.z,    ' + SBP(x) + '*vr' + ik + '.x ) / (2.*3.141592);\
+					float p'+ ik + '= 0.5  - atan( ' + SBP(y) + '*vr' + ik + '.y, length( vr' + ik + '.xz ) ) / ( 3.141592);\
+					result = texture(  '+ ref + ', vec2( y' + ik + ', p' + ik + ') ,' + SBP(bias) + ' );\
+					';
+		};
 
 
 		var createScene = async function (jsonData) {
@@ -153,10 +225,10 @@
 			mirrorMaterial.reflectionTexture.level = 1;
 
 			//LIGHTS
-			var dirLight = new BABYLON.HemisphericLight("dirLight", new BABYLON.Vector3(0, 1, 0), scene);
-			dirLight.intensity = 0.5;
-			// dirLight.diffuse = BABYLON.Color3.White();
-			// dirLight.groundColor = BABYLON.Color3.Blue();
+			var dirLight = new BABYLON.HemisphericLight("dirLight", new BABYLON.Vector3(1, 1, 1), scene);
+			dirLight.intensity = 0.9;
+			dirLight.diffuse = BABYLON.Color3.White();
+			dirLight.groundColor = new BABYLON.Color3(0.3, 0.3, 0.3);
 			var pLight = new BABYLON.PointLight("pLight", new BABYLON.Vector3(1, 10, 1), scene);
 			pLight.intensity = 0.5;
 			pLight.parent = camera;
@@ -252,7 +324,25 @@
 						}
 						//LOGO3D
 						if (mesh.name.indexOf("Logo_Float") > -1) {
+							mesh.createNormals(true);
+							mesh.unfreezeNormals();
 							logoFloat = mesh;
+							var logoMatMulti = new BABYLON.MultiMaterial("logoMatMulti", scene);
+							// logoMatMulti.subMaterials.push(material0);
+							// logoMatMulti.subMaterials.push(material1);
+							// logoMatMulti.subMaterials.push(material2);
+							for (let index = 0; index < mesh.subMeshes.length; index++) {
+								const element = mesh.subMeshes[index];
+								// element.material = CreateSBMaterial[index];
+								element.materialIndex = index;
+								logoMatMulti.subMaterials.push(CreateSBMaterial(index));
+							}
+							mesh.material = logoMatMulti;
+
+							// for (let index = 0; index < mesh.subMeshes.length; index++) {
+							// 	const element = array[index];
+							// 	scene.getMaterialByName("Material #" + (index + 16).toString()) = ;
+							// }
 						}
 
 						if (mesh.name.indexOf("glass") > -1) {
@@ -580,8 +670,21 @@
 
 
 
+			//BABYLONX SHADERBUILDER MATS
+			scene.registerBeforeRender(function () {
+				time++;
+				new BABYLONX.ShaderMaterialHelper().SetUniforms(
+					scene.meshes,
+					camera.position,
+					camera.target,
+					{ x: 0, y: 0 },
+					{ x: 100, y: 100 },
+					time);
 
-
+				if (time * 1. % 40. < 0.1) {
+					loc = { x: camera.position.x, y: 130, z: camera.position.z };
+				}
+			});
 
 
 
