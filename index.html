@@ -363,7 +363,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 						//Wall_Master Lightmaps
 						if (mesh.name.indexOf("Wall_Master") > -1) {
 							let mat = new BABYLON.StandardMaterial("mat_Wall_Master", scene);
-							let tex = new BABYLON.Texture("./models/Wall_Master_Difuse.jpg", scene);
+							let tex = new BABYLON.Texture("./models/Wall_Master_Arnold_RGBA.jpg", scene);
 							mat.lightmapTexture = tex;
 							mat.lightmapTexture.coordinatesIndex = 0;
 							mat.useLightmapAsShadowmap = true;
@@ -374,6 +374,39 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 							mesh.checkCollisions = true;
 						}
 						if (mesh.name.indexOf("Wall_0") > -1) {
+							let mat = new BABYLON.StandardMaterial("mat_Wall_0", scene);
+							let tex = new BABYLON.Texture("./models/Wall_01_Arnold_RGBA.jpg", scene);
+							mat.lightmapTexture = tex;
+							mat.lightmapTexture.coordinatesIndex = 0;
+							mat.useLightmapAsShadowmap = true;
+							mat.ambientColor = BABYLON.Color3.White();
+							// mat.specularColor = BABYLON.Color3.White();
+							mesh.material = mat;
+
+							mesh.checkCollisions = true;
+						}
+						if (mesh.name.indexOf("Bench_Center") > -1) {
+							let mat = new BABYLON.StandardMaterial("mat_Bench_Center", scene);
+							let tex = new BABYLON.Texture("./models/Bench_Center_Arnold_RGBA.jpg", scene);
+							mat.lightmapTexture = tex;
+							mat.lightmapTexture.coordinatesIndex = 0;
+							mat.useLightmapAsShadowmap = true;
+							mat.ambientColor = BABYLON.Color3.White();
+							// mat.specularColor = BABYLON.Color3.White();
+							mesh.material = mat;
+
+							mesh.checkCollisions = true;
+						}
+						if (mesh.name.indexOf("Logo_Solana") > -1) {
+							let mat = new BABYLON.StandardMaterial("mat_Logo_Solana", scene);
+							let tex = new BABYLON.Texture("./models/solana.jpg", scene);
+							mat.lightmapTexture = tex;
+							mat.lightmapTexture.coordinatesIndex = 0;
+							mat.useLightmapAsShadowmap = true;
+							mat.ambientColor = BABYLON.Color3.White();
+							// mat.specularColor = BABYLON.Color3.White();
+							mesh.material = mat;
+
 							mesh.checkCollisions = true;
 						}
 
