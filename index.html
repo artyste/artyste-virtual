@@ -144,6 +144,8 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 		var runSens = 4000;
 		var artName = "Asset_";
 		var logoFloat = null;
+		var logoSolana = null;
+		var logoMetaplex = null;
 		var logoSpeed = 0.2;
 		var logoFloatSpeed = 0.8;
 		var totalTime = 0.0;
@@ -410,12 +412,27 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 							mesh.checkCollisions = true;
 						}
 						if (mesh.name.indexOf("Logo_Solana") > -1) {
+							logoSolana = mesh;
 							let mat = new BABYLON.StandardMaterial("mat_Logo_Solana", scene);
 							let tex = new BABYLON.Texture("./models/solana.jpg", scene);
 							mat.lightmapTexture = tex;
 							mat.lightmapTexture.coordinatesIndex = 0;
 							mat.useLightmapAsShadowmap = true;
 							mat.ambientColor = BABYLON.Color3.White();
+							// mat.specularColor = BABYLON.Color3.White();
+							mesh.material = mat;
+
+							mesh.checkCollisions = true;
+						}
+						if (mesh.name.indexOf("Logo_Metaplex") > -1) {
+							logoMetaplex = mesh;
+							let mat = new BABYLON.StandardMaterial("mat_Logo_Metaplex", scene);
+							// let tex = new BABYLON.Texture("./models/solana.jpg", scene);
+							// mat.lightmapTexture = tex;
+							// mat.lightmapTexture.coordinatesIndex = 0;
+							// mat.useLightmapAsShadowmap = true;
+							// mat.ambientColor = BABYLON.Color3.White();
+							mat.diffuseColor = BABYLON.Color3.White();
 							// mat.specularColor = BABYLON.Color3.White();
 							mesh.material = mat;
 
@@ -555,7 +572,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 			scene.onKeyboardObservable.add((kbInfo) => {
 				switch (kbInfo.type) {
 					case BABYLON.KeyboardEventTypes.KEYDOWN:
-						console.log("KEY DOWN: ", kbInfo.event.key);
+						// console.log("KEY DOWN: ", kbInfo.event.key);
 						switch (kbInfo.event.keyCode) {
 							case 87: //W: Move OBJECT towards, NOT camera. TODO: create character RIG
 								break;
@@ -572,7 +589,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 						}
 						break;
 					case BABYLON.KeyboardEventTypes.KEYUP:
-						console.log("KEY UP: ", kbInfo.event.keyCode);
+						// console.log("KEY UP: ", kbInfo.event.keyCode);
 						switch (kbInfo.event.keyCode) {
 							case 87: //W: Move OBJECT towards, NOT camera. TODO: create character RIG
 								break;
@@ -765,9 +782,20 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 					totalTime += deltaTime;
 					// camera.position.y = 1.8;
 
+					//LOGOS
 					if (logoFloat != null) {
 						logoFloat.rotate(BABYLON.Axis.Y, Math.PI * deltaTime * logoSpeed, BABYLON.Space.WORLD);
 						logoFloat.position = new BABYLON.Vector3(logoFloat.position.x, 4 + Math.sin(totalTime * logoFloatSpeed) * 0.5, logoFloat.position.z);
+					}
+					if (logoSolana != null && logoMetaplex != null) {
+						if (camera.position.z > -10) {
+							logoSolana.rotation = new BABYLON.Vector3(0, Math.PI, 0);
+							logoMetaplex.rotation = new BABYLON.Vector3(0, Math.PI, 0);
+						}
+						else {
+							logoSolana.rotation = new BABYLON.Vector3(0, 0, 0);
+							logoMetaplex.rotation = new BABYLON.Vector3(0, 0, 0);
+						}
 					}
 
 					//WALLS
@@ -781,6 +809,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 							wallR.position.y,
 							wallR.position.z);
 					}
+
 
 
 					waterMat.setFloat("time", totalTime);
