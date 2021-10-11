@@ -239,6 +239,8 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 			const frameScale = new BABYLON.Vector3(frameSize, frameSize, frameSize);
 
 
+
+
 			mirrorMaterial = new BABYLON.StandardMaterial("mirror", scene);
 			mirrorMaterial.reflectionTexture = new BABYLON.MirrorTexture("mirror", 1024, scene, true);
 			// mirrorMaterial.reflectionTexture.mirrorPlane = reflector;
@@ -449,6 +451,10 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 			hudImg.top = (canvas.height / 2) - (hudImgH / 2);
 			gui.addControl(hudImg);
 
+			// scene.onPointerObservable.add(function (pointerInfo, eventState) {
+			// 	console.log('%c PointerObservable: pointer double tap', 'background: blue; color: white');
+			// }, BABYLON.PointerEventTypes.POINTERDOUBLETAP, false);
+
 
 			//LOAD MODELS
 			// var sphere = BABYLON.MeshBuilder.CreateSphere("sphere", { diameter: 1, segments: 4 }, scene);
@@ -464,9 +470,21 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 						// console.log(mesh.name);
 						// console.log(mesh.position);
 						smokeMirrorMaterial.reflectionTexture.renderList.push(mesh);
+						let idx = parseInt(mesh.name.substring(6)) - 1;
+
 
 						//ARTS
 						if (mesh.name.indexOf(artName) > -1) {
+
+							//PICK
+							mesh.isPickable = true;
+							mesh.actionManager = new BABYLON.ActionManager(scene);
+							mesh.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger, () => {
+								const pick = scene.pick(scene.pointerX, scene.pointerY);
+								if (BABYLON.Vector3.Distance(camera.position, mesh.position) < 20) {
+									window.open("https://demo.artyste.info/artworks/" + jsonData[idx].id).focus();
+								}
+							}));
 
 							//FRAME
 							let frame = mesh.clone();
@@ -483,9 +501,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 
 							mesh.translate(BABYLON.Axis.Y, 0.03, BABYLON.Space.LOCAL);
 
-							let idx = parseInt(mesh.name.substring(6)) - 1;
 							if (idx < jsonData.length - 1) {
-
 								let matArt = new BABYLON.StandardMaterial("matArt", scene);
 								let texArt = new BABYLON.Texture(jsonData[idx].fileimage, scene, false, true, BABYLON.Texture.TRILINEAR_SAMPLINGMODE, function () {
 									var texSize = texArt.getSize();
@@ -509,6 +525,19 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 								frame.scaling = frame.scaling.multiply(frameScale);
 								mesh.material = GetPlaceholder();
 							}
+
+							// mesh.actionManager = new BABYLON.ActionManager(scene);
+							// mesh.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnDoublePickTrigger, (function (mesh) {
+							// 	console.log("%c ActionManager: double pick : " + mesh.name, 'background: green; color: white');
+							// }).bind(this, mesh)));
+
+
+							// mesh.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnDoublePickTrigger, () => {
+							// 	console.log(114);
+							// 	mesh.moveWithCollisions(new BABYLON.Vector3(-1, 0, 0));
+							// }));
+
+
 						}
 
 						//LOGO
@@ -584,6 +613,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 
 							mesh.checkCollisions = true;
 						}
+
 						if (mesh.name.indexOf("Wall_0") > -1) {
 							let mat = new BABYLON.StandardMaterial("mat_Wall_0", scene);
 							let tex = new BABYLON.Texture("./models/Wall_01_Arnold_RGBA.jpg", scene);
