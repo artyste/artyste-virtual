@@ -506,7 +506,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 								//PICK
 								mesh.isPickable = true;
 								mesh.actionManager = new BABYLON.ActionManager(scene);
-								mesh.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger, () => {
+								mesh.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnLeftPickTrigger, () => {
 									const pick = scene.pick(scene.pointerX, scene.pointerY);
 									if (BABYLON.Vector3.Distance(camera.position, mesh.position) < 20) {
 										window.open("https://demo.artyste.info/artworks/" + jsonData[idx].id).focus();
