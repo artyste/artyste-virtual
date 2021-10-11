@@ -385,7 +385,8 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 			skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
 			skyboxMaterial.diffuseColor = BABYLON.Color3.Black();
 			skyboxMaterial.specularColor = BABYLON.Color3.Black();
-			skyboxMaterial.disableLighting = true;
+			skyboxMaterial.ambientColor = new BABYLON.Color3(0.5, 0.5, 0.5);
+			// skyboxMaterial.disableLighting = true;
 			skybox.material = skyboxMaterial;
 			renderTarget.renderList.push(skybox);
 
