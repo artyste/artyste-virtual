@@ -167,7 +167,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 		var doorMat = null;
 		var matPlants = null
 
-		var advancedTexture = null
+		var gui = null
 		var hudImg = null;
 		var hudImgH = 0;
 
@@ -218,6 +218,11 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 			camera.checkCollisions = true;
 			camera.applyGravity = true;
 			camera.ellipsoid = new BABYLON.Vector3(0.4, camHeight / 2, 0.4);
+			// scene.activeCameras.push(camera);
+
+			// cameraGUI = new BABYLON.FreeCamera("camera", new BABYLON.Vector3(0, 1, -4), scene);
+			// cameraGUI.layerMask = 0x20000000;
+			// scene.activeCameras.push(cameraGUI);
 
 			// camera.setTarget(BABYLON.Vector3.Zero());
 			camera.attachControl(false);
@@ -241,7 +246,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 
 			//LIGHTS
 			var dirLight = new BABYLON.HemisphericLight("dirLight", new BABYLON.Vector3(1, 1, 1), scene);
-			dirLight.intensity = 0.7;
+			dirLight.intensity = 0.8;
 			dirLight.diffuse = BABYLON.Color3.White();
 			dirLight.groundColor = new BABYLON.Color3(0.3, 0.3, 0.3);
 			var pLight = new BABYLON.PointLight("pLight", new BABYLON.Vector3(1, 10, 1), scene);
@@ -249,7 +254,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 			pLight.parent = camera;
 			pLight.position = new BABYLON.Vector3(0, 0, 0);
 			var pLight2 = new BABYLON.PointLight("pLight2", new BABYLON.Vector3(0, 8, 0), scene);
-			pLight2.intensity = 0.3;
+			pLight2.intensity = 0.4;
 
 			var refCube = BABYLON.Mesh.CreateBox("refCube", 1, scene);
 			refCube.position = new BABYLON.Vector3(0, 0, 0);
@@ -435,13 +440,14 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 			// GUI
 			hudImgW = 300;
 			hudImgH = 100;
-			advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+			gui = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+			// gui.layer.layerMask = 0x20000000;
 			hudImg = new BABYLON.GUI.Image("hudImg", "./models/solana.jpg");
 			hudImg.width = hudImgW.toString() + "px";
 			hudImg.height = hudImgH.toString() + "px";
 			// hudImg.height = "40px";
 			hudImg.top = (canvas.height / 2) - (hudImgH / 2);
-			advancedTexture.addControl(hudImg);
+			gui.addControl(hudImg);
 
 
 			//LOAD MODELS
@@ -511,6 +517,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 							var texLogo = new BABYLON.Texture(jsonData[jsonData.length - 1].gallery.avatar, scene);
 							matLogo.diffuseTexture = texLogo;
 							matLogo.speculartexture = texLogo;
+							matLogo.specularPower = 200;
 							mesh.material = matLogo;
 						}
 						//BANNER
@@ -519,6 +526,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 							var texBanner = new BABYLON.Texture(jsonData[jsonData.length - 1].gallery.banner, scene);
 							matBanner.diffuseTexture = texBanner;
 							matBanner.speculartexture = texBanner;
+							matBanner.specularPower = 200;
 							mesh.material = matBanner;
 						}
 						//LOGO3D
@@ -571,7 +579,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 							mat.lightmapTexture.coordinatesIndex = 0;
 							mat.useLightmapAsShadowmap = true;
 							mat.ambientColor = BABYLON.Color3.White();
-							// mat.specularColor = BABYLON.Color3.White();
+							mat.specularColor = new BABYLON.Color3(0.3, 0.3, 0.3);
 							mesh.material = mat;
 
 							mesh.checkCollisions = true;
@@ -750,6 +758,25 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 						break;
 				}
 			});
+
+			// POST
+			var pipeline = new BABYLON.DefaultRenderingPipeline(
+				"defaultPipeline", // The name of the pipeline
+				true, // Do you want the pipeline to use HDR texture?
+				scene, // The scene instance
+				[camera] // The list of cameras to be attached to
+			);
+			// pipeline.imageProcessing.toneMappingEnabled = true;
+			pipeline.imageProcessing.vignetteEnabled = true;
+			pipeline.imageProcessing.vignetteColor = new BABYLON.Color4(0, 0, 0, 1);
+			pipeline.imageProcessing.vignetteWeight = 3;
+
+			pipeline.bloomEnabled = true;
+			pipeline.bloomThreshold = 0.9;
+			pipeline.bloomWeight = 0.15;
+			pipeline.bloomKernel = 64;
+			pipeline.bloomScale = 0.5;
+
 
 
 			//WebXR (needs https SSL/certificate to work properly)
