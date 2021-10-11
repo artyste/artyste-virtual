@@ -167,6 +167,10 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 		var doorMat = null;
 		var matPlants = null
 
+		var advancedTexture = null
+		var hudImg = null;
+		var hudImgH = 0;
+
 		var time = 0;
 		var SB = BABYLONX.ShaderBuilder;
 		var SBP = BABYLONX.Shader.Print;
@@ -426,12 +430,14 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 
 
 			// GUI
-			var advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
-			var hudImg = new BABYLON.GUI.Image("hudImg", "./models/solana.jpg");
-			hudImg.width = 0.3;
-			hudImg.height = 0.2;
+			hudImgW = 300;
+			hudImgH = 100;
+			advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+			hudImg = new BABYLON.GUI.Image("hudImg", "./models/solana.jpg");
+			hudImg.width = hudImgW.toString() + "px";
+			hudImg.height = hudImgH.toString() + "px";
 			// hudImg.height = "40px";
-			hudImg.top = canvas.height / 2 - 0.1;
+			hudImg.top = (canvas.height / 2) - (hudImgH / 2);
 			advancedTexture.addControl(hudImg);
 
 
@@ -834,7 +840,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 
 
 					waterMat.setFloat("time", totalTime);
-
+					hudImg.top = (canvas.height / 2) - (hudImgH / 2);
 
 					// console.log(camera.position.y)
 
