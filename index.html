@@ -334,8 +334,8 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 						}
 						//LOGO3D
 						if (mesh.name.indexOf("Logo_Float") > -1) {
-							mesh.createNormals(true);
-							mesh.unfreezeNormals();
+							// mesh.createNormals(true);
+							// mesh.unfreezeNormals();
 							logoFloat = mesh;
 							var logoMatMulti = new BABYLON.MultiMaterial("logoMatMulti", scene);
 							// logoMatMulti.subMaterials.push(material0);
@@ -411,6 +411,27 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 
 							mesh.checkCollisions = true;
 						}
+						if (mesh.name.indexOf("Bench_001") > -1) {
+							var logoMatMulti = new BABYLON.MultiMaterial("benchMatMulti", scene);
+							for (let index = 0; index < mesh.subMeshes.length; index++) {
+								const element = mesh.subMeshes[index];
+								// element.material = CreateSBMaterial[index];
+								element.materialIndex = index;
+								let mat = new BABYLON.StandardMaterial("matBench", scene);
+								mat.diffuseColor = index == 0 ? new BABYLON.Color3(200 / 255, 160 / 255, 130 / 255) : new BABYLON.Color3(0.1, 0.1, 0.1);
+								mat.specularPower = 300;
+								// logoMatMulti.subMaterials.push(CreateSBMaterial(index));
+								logoMatMulti.subMaterials.push(mat);
+							}
+							mesh.material = logoMatMulti;
+
+							// for (let index = 0; index < mesh.subMeshes.length; index++) {
+							// 	const element = array[index];
+							// 	scene.getMaterialByName("Material #" + (index + 16).toString()) = ;
+							// }
+						}
+
+
 						if (mesh.name.indexOf("Logo_Solana") > -1) {
 							logoSolana = mesh;
 							let mat = new BABYLON.StandardMaterial("mat_Logo_Solana", scene);
@@ -723,11 +744,12 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 			fumeMat.alpha = 0.9;
 
 			doorMat = new BABYLON.StandardMaterial("doorMat", scene);
-			doorMat.diffuseColor = new BABYLON.Color3(0.4, 0.4, 0.0);
+			doorMat.diffuseColor = new BABYLON.Color3(1, 1, 1);
 			var specColorPwr = 1;
-			doorMat.specularPower = 500;
+			doorMat.specularPower = 300;
 			doorMat.specularColor = new BABYLON.Color3(specColorPwr, specColorPwr, specColorPwr);
-			doorMat.alpha = 0.6;
+			doorMat.alpha = 0.4;
+			doorMat.useSpecularOverAlpha = true;
 
 
 
@@ -788,14 +810,8 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 						logoFloat.position = new BABYLON.Vector3(logoFloat.position.x, 4 + Math.sin(totalTime * logoFloatSpeed) * 0.5, logoFloat.position.z);
 					}
 					if (logoSolana != null && logoMetaplex != null) {
-						if (camera.position.z > -10) {
-							logoSolana.rotation = new BABYLON.Vector3(0, Math.PI, 0);
-							logoMetaplex.rotation = new BABYLON.Vector3(0, Math.PI, 0);
-						}
-						else {
-							logoSolana.rotation = new BABYLON.Vector3(0, 0, 0);
-							logoMetaplex.rotation = new BABYLON.Vector3(0, 0, 0);
-						}
+						logoSolana.rotation = camera.position.z > -10 ? new BABYLON.Vector3(0, Math.PI, 0) : new BABYLON.Vector3(0, 0, 0);
+						logoMetaplex.rotation = logoSolana.rotation;
 					}
 
 					//WALLS
