@@ -36,6 +36,9 @@
 			width: 100%;
 			height: 100%;
 			touch-action: none;
+			outline: none;
+			/* mobile webkit */
+			-webkit-tap-highlight-color: rgba(255, 255, 255, 0);
 		}
 	</style>
 </head>
@@ -64,8 +67,15 @@
 
 		// FINISH SCENE IMPORT
 		var FinishSceneImport = function () {
-			console.log(123456)
+			console.log("sceneReady")
+			hudBG.isVisible = false;
+			hudLoad.isVisible = false;
+			hudText.isVisible = false;
+
+			canvas.focus();
+			sceneReady = true;
 		}
+
 		// GET PALCEHOLDER
 		var GetPlaceholder = function (url) {
 			if (placeHolderTex == null) {
@@ -90,21 +100,21 @@
 				//https://i.imgur.com/4LudcMp.jpg normal map
 				.InLine(`vec3 new_nrm =nrm; 
 
-vec3 color1 = vec3(1.,1.,0. );
-vec3 color2 =   vec3(`+ logoColorsStr[idx] + `);
+				vec3 color1 = vec3(1.,1.,0. );
+				vec3 color2 =   vec3(`+ logoColorsStr[idx] + `);
 
-vec3 ns_pos = pos;
+				vec3 ns_pos = pos;
 
- float ns  = noise(r_y(pos*200.,camera.y*0.1+1.1,vec3(0.)))*0.2+0.2 ;
-float ns2  = noise(r_y(pos*400.,camera.x*0.1+1.1,vec3(0.)))*0.82 ;
+				float ns  = noise(r_y(pos*200.,camera.y*0.1+1.1,vec3(0.)))*0.2+0.2 ;
+				float ns2  = noise(r_y(pos*400.,camera.x*0.1+1.1,vec3(0.)))*0.82 ;
 
-float height_map = 0.; 
-vec3 diff = vec3(1.)*(ns*0.1+0.9); 
+				float height_map = 0.; 
+				vec3 diff = vec3(1.)*(ns*0.1+0.9); 
 
-float roughness = (0.5+ns*0.5)*9.- (noise(pos*0.1)*0.5 )*5. ; 
+				float roughness = (0.5+ns*0.5)*9.- (noise(pos*0.1)*0.5 )*5. ; 
 
-float metallic = 1.-ns ; 
-float fs =  min(1.,max(0., pow(dot(normalize(camera-pos),new_nrm),1.)*1.));`)
+				float metallic = 1.-ns ; 
+				float fs =  min(1.,max(0., pow(dot(normalize(camera-pos),new_nrm),1.)*1.));`)
 
 				.InLine(reflectPart(
 					'txtRef_0', 'new_nrm'
@@ -119,7 +129,6 @@ float fs =  min(1.,max(0., pow(dot(normalize(camera-pos),new_nrm),1.)*1.));`)
 				.InLine('result = vec4((1.-metallic)*diff + metallic*ref2,1.);')
 				.InLine('result = vec4( ns2*5.*color1+  (ns*2.+0.8)*(ref2*length(ref2)*0.5+length(ref2)*0.5)-ns2*3.*vec3(1.)  ,1.);')
 				.InLine(`
-
 	result.xyz  = (result.xyz*0.1+ns*0.3*color1 +0.6) *smoothstep(0.,3.,3.-ns2);
 result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos(ns*3.25)*0.6+sin(15.*ns*123.325)*0.6,sin(ns*23.21)*0.2+cos(ns)*0.8,cos(ns))*ns2*ns,result.xyz)-(1.-fs)*0.3;
 `)
@@ -136,7 +145,6 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 		var createDefaultEngine = function () { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, disableWebGL2Support: false }); };
 		var camera = null;
 		var camHeight = 1.8;
-		var sceneReady = false;
 		var waterMat = null;
 		var walkSpeed = 0.1;
 		var runSpeed = 0.4;
@@ -153,6 +161,10 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 		var placeHolderTex = null;
 		var placeHolderMat = null;
 		// var artsEmpty = [];
+		var sceneReady = false;
+		var rdy1 = false;
+		var rdy2 = false;
+		var rdy3 = false;
 
 		const doorDist = 2;
 		var wallGlass = null;
@@ -171,6 +183,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 		var hudImg = null;
 		var hudImgH = 0;
 		var hudLoad = null;
+		var hudText = null;
 
 		var time = 0;
 		var SB = BABYLONX.ShaderBuilder;
@@ -205,7 +218,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 		};
 
 
-		var createScene = async function (jsonData) {
+		var delayCreateScene = function (jsonData) {
 
 			scene = new BABYLON.Scene(engine);
 			scene.clearColor = BABYLON.Color3.Black();
@@ -235,12 +248,12 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 			hudLoad.height = "50px";
 			// hudLoad.height = "40px";
 			gui.addControl(hudLoad);
-			var text1 = new BABYLON.GUI.TextBlock();
-			text1.text = "please wait";
-			text1.top = "60px";
-			text1.color = "white";
-			text1.fontSize = 30;
-			gui.addControl(text1);
+			hudText = new BABYLON.GUI.TextBlock();
+			hudText.text = "please wait";
+			hudText.top = "60px";
+			hudText.color = "white";
+			hudText.fontSize = 30;
+			gui.addControl(hudText);
 
 
 			camera = new BABYLON.FreeCamera("camera", new BABYLON.Vector3(0, 1, -4), scene);
@@ -479,8 +492,8 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 
 			if (virtID != null) {
 				Promise.all([
-					BABYLON.SceneLoader.ImportMeshAsync("", "./models/", "virtual" + virtID.toString().padStart(2, '0') + ".babylon", scene).then(function (result) {
-						result.meshes.forEach((mesh) => {
+					BABYLON.SceneLoader.ImportMesh("", "./models/", "virtual" + virtID.toString().padStart(2, '0') + ".babylon", scene, function (newMeshes) {
+						newMeshes.forEach((mesh) => {
 							// console.log(mesh.name);
 							// console.log(mesh.position);
 							smokeMirrorMaterial.reflectionTexture.renderList.push(mesh);
@@ -618,6 +631,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 							if (mesh.name.indexOf("Wall_Master") > -1) {
 								let mat = new BABYLON.StandardMaterial("mat_Wall_Master", scene);
 								let tex = new BABYLON.Texture("./models/Wall_Master_Arnold_RGBA.jpg", scene);
+								// let tex = mesh.material.diffuseTexture;
 								mat.lightmapTexture = tex;
 								mat.lightmapTexture.coordinatesIndex = 0;
 								mat.useLightmapAsShadowmap = true;
@@ -626,11 +640,16 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 								mesh.material = mat;
 
 								mesh.checkCollisions = true;
+
+								tex.onLoadObservable.add(() => {
+									rdy1 = true;
+								});
 							}
 
 							if (mesh.name.indexOf("Wall_0") > -1) {
 								let mat = new BABYLON.StandardMaterial("mat_Wall_0", scene);
 								let tex = new BABYLON.Texture("./models/Wall_01_Arnold_RGBA.jpg", scene);
+								// let tex = mesh.material.diffuseTexture;
 								mat.lightmapTexture = tex;
 								mat.lightmapTexture.coordinatesIndex = 0;
 								mat.useLightmapAsShadowmap = true;
@@ -639,10 +658,16 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 								mesh.material = mat;
 
 								mesh.checkCollisions = true;
+
+								tex.onLoadObservable.add(() => {
+									rdy2 = true;
+									rdy3 = true;
+								});
 							}
 							if (mesh.name.indexOf("Bench_Center") > -1) {
 								let mat = new BABYLON.StandardMaterial("mat_Bench_Center", scene);
-								let tex = new BABYLON.Texture("./models/Bench_Center_Arnold_RGBA.jpg", scene);
+								// let tex = new BABYLON.Texture("./models/Bench_Center_Arnold_RGBA.jpg", scene);
+								let tex = mesh.material.diffuseTexture;
 								mat.lightmapTexture = tex;
 								mat.lightmapTexture.coordinatesIndex = 0;
 								mat.useLightmapAsShadowmap = true;
@@ -672,7 +697,8 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 							if (mesh.name.indexOf("Logo_Solana") > -1) {
 								logoSolana = mesh;
 								let mat = new BABYLON.StandardMaterial("mat_Logo_Solana", scene);
-								let tex = new BABYLON.Texture("./models/solana.jpg", scene);
+								// let tex = new BABYLON.Texture("./models/solana.jpg", scene);
+								let tex = mesh.material.diffuseTexture;
 								mat.lightmapTexture = tex;
 								mat.lightmapTexture.coordinatesIndex = 0;
 								mat.useLightmapAsShadowmap = true;
@@ -738,15 +764,12 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 
 
 
-						FinishSceneImport();
+						// FinishSceneImport();
 					})
 				]).then(() => {
-					// scene.createDefaultCameraOrLight(true, true, true);
-					// scene.activeCamera.alpha += Math.PI;
-					console.log(124536736)
-					hudBG.isVisible = false;
-					hudLoad.isVisible = false;
-					text1.isVisible = false;
+					// // scene.createDefaultCameraOrLight(true, true, true);
+					// // scene.activeCamera.alpha += Math.PI;
+					// console.log(124536736)
 				});
 
 			}
@@ -833,7 +856,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 
 			//WebXR (needs https SSL/certificate to work properly)
 			// const env = scene.createDefaultEnvironment();
-			const xr = await scene.createDefaultXRExperienceAsync({
+			const xr = scene.createDefaultXRExperienceAsync({
 				floorMeshes: [ground]
 			});
 
@@ -887,11 +910,12 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 			var jsonData = await getJson();
 			if (!engine) throw 'engine should not be null.';
 			if (!jsonData) throw 'Not json data!?';
-			window.scene = await createScene(jsonData);
+			window.scene = await delayCreateScene(jsonData);
 		};
 
 		initFunction().then(() => {
 			sceneToRender = scene
+
 			engine.runRenderLoop(function () {
 				if (sceneToRender && sceneToRender.activeCamera) {
 					deltaTime = engine.getDeltaTime() * 0.001;
@@ -899,6 +923,10 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 					// camera.position.y = 1.8;
 
 					hudLoad.rotation = totalTime * 4;
+
+					if (!sceneReady && rdy1 && rdy2 && rdy3) {
+						FinishSceneImport();
+					}
 
 					//LOGOS
 					if (logoFloat != null) {
