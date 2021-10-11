@@ -162,7 +162,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 		var renderTarget;
 
 		var mirrorMaterial = null;
-		var mirrorMeshes = [];
+		// var mirrorMeshes = [];
 		var fumeMat = null;
 		var doorMat = null;
 		var matPlants = null
@@ -241,13 +241,15 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 
 			//LIGHTS
 			var dirLight = new BABYLON.HemisphericLight("dirLight", new BABYLON.Vector3(1, 1, 1), scene);
-			dirLight.intensity = 0.9;
+			dirLight.intensity = 0.7;
 			dirLight.diffuse = BABYLON.Color3.White();
 			dirLight.groundColor = new BABYLON.Color3(0.3, 0.3, 0.3);
 			var pLight = new BABYLON.PointLight("pLight", new BABYLON.Vector3(1, 10, 1), scene);
 			pLight.intensity = 0.5;
 			pLight.parent = camera;
 			pLight.position = new BABYLON.Vector3(0, 0, 0);
+			var pLight2 = new BABYLON.PointLight("pLight2", new BABYLON.Vector3(0, 8, 0), scene);
+			pLight2.intensity = 0.3;
 
 			var refCube = BABYLON.Mesh.CreateBox("refCube", 1, scene);
 			refCube.position = new BABYLON.Vector3(0, 0, 0);
@@ -418,11 +420,11 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 			var smokeMirrorMaterial = new BABYLON.StandardMaterial("smokeMirror", scene);
 			smokeMirrorMaterial.reflectionTexture = new BABYLON.MirrorTexture("smokeMirror", 1024, scene, true);
 			smokeMirrorMaterial.reflectionTexture.mirrorPlane = reflector;
-			for (let index = 0; index < mirrorMeshes.length; index++) {
-				const element = mirrorMeshes[index];
-				smokeMirrorMaterial.reflectionTexture.renderList.push(element);
-				// console.log(index);
-			}
+			// for (let index = 0; index < mirrorMeshes.length; index++) {
+			// 	const element = mirrorMeshes[index];
+			// 	smokeMirrorMaterial.reflectionTexture.renderList.push(element);
+			// 	// console.log(index);
+			// }
 			smokeMirrorMaterial.reflectionTexture.level = 0.15;
 			smokeMirrorMaterial.diffuseColor = BABYLON.Color3.Black();
 
@@ -454,7 +456,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 					newMeshes.forEach((mesh) => {
 						// console.log(mesh.name);
 						// console.log(mesh.position);
-						mirrorMeshes.push(mesh);
+						smokeMirrorMaterial.reflectionTexture.renderList.push(mesh);
 
 						//ARTS
 						if (mesh.name.indexOf(artName) > -1) {
@@ -462,7 +464,8 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 							//FRAME
 							let frame = mesh.clone();
 							renderTarget.renderList.push(frame);
-							mirrorMeshes.push(frame);
+							smokeMirrorMaterial.reflectionTexture.renderList.push(frame);
+
 							frame.name = mesh.name.replace("Asset", "Frame");
 							let matFrame = new BABYLON.StandardMaterial("matFrame", scene);
 							matFrame.diffuseColor = color2;
