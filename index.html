@@ -518,7 +518,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 									// if (pick && BABYLON.Vector2.Distance(pick.pickedPoint, scene.pick(scene.pointerX, scene.pointerY).pickedPoint) < 0.2 && BABYLON.Vector3.Distance(camera.position, mesh.position) < 20) {
 									// 	window.open("https://demo.artyste.info/artworks/" + jsonData[idx].id).focus();
 									// }
-									if (e.sourceEvent.button === 0) {
+									if (e.sourceEvent.button === 0 && jsonData[idx].id) {
 										window.open("https://demo.artyste.info/artworks/" + jsonData[idx].id).focus();
 									}
 								}));
