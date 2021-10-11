@@ -425,6 +425,14 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 			smokeMirror.material = smokeMirrorMaterial;
 
 
+			// GUI
+			var advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+			var hudImg = new BABYLON.GUI.Image("hudImg", "./models/solana.jpg");
+			hudImg.width = 0.3;
+			hudImg.height = 0.2;
+			// hudImg.height = "40px";
+			hudImg.top = canvas.height / 2 - 0.1;
+			advancedTexture.addControl(hudImg);
 
 
 			//LOAD MODELS
@@ -767,7 +775,6 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 					loc = { x: camera.position.x, y: 130, z: camera.position.z };
 				}
 			});
-
 
 
 
