@@ -421,11 +421,11 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 			fumeMat.alpha = 0.9;
 
 			doorMat = new BABYLON.StandardMaterial("doorMat", scene);
-			doorMat.diffuseColor = new BABYLON.Color3(1, 1, 1);
-			var specColorPwr = 1;
-			doorMat.specularPower = 300;
+			doorMat.diffuseColor = new BABYLON.Color3(0.8, 1, 0.9);
+			var specColorPwr = 0.9;
+			doorMat.specularPower = 30;
 			doorMat.specularColor = new BABYLON.Color3(specColorPwr, specColorPwr, specColorPwr);
-			doorMat.alpha = 0.4;
+			doorMat.alpha = 0.1;
 			doorMat.useSpecularOverAlpha = true;
 
 
