@@ -64,7 +64,7 @@
 
 		// FINISH SCENE IMPORT
 		var FinishSceneImport = function () {
-
+			console.log(123456)
 		}
 		// GET PALCEHOLDER
 		var GetPlaceholder = function (url) {
@@ -170,6 +170,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 		var gui = null
 		var hudImg = null;
 		var hudImgH = 0;
+		var hudLoad = null;
 
 		var time = 0;
 		var SB = BABYLONX.ShaderBuilder;
@@ -211,6 +212,35 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 			scene.ambientColor = BABYLON.Color3.White();
 			scene.collisionsEnabled = true;
 			scene.gravity = new BABYLON.Vector3(0, -0.15, 0);
+
+			// GUI
+			gui = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+			// gui.layer.layerMask = 0x20000000;
+			hudImgW = 300;
+			hudImgH = 100;
+			hudImg = new BABYLON.GUI.Image("hudImg", "./models/solana.jpg");
+			hudImg.width = hudImgW.toString() + "px";
+			hudImg.height = hudImgH.toString() + "px";
+			// hudImg.height = "40px";
+			hudImg.top = (canvas.height / 2) - (hudImgH / 2);
+			gui.addControl(hudImg);
+
+			hudBG = new BABYLON.GUI.Image("hudBG", "./models/solana.jpg");
+			hudBG.width = 1;
+			hudBG.height = 1;
+			// hudBG.height = "40px";
+			gui.addControl(hudBG);
+			hudLoad = new BABYLON.GUI.Image("hudLoad", "./tex/artyste.png");
+			hudLoad.width = "50px";
+			hudLoad.height = "50px";
+			// hudLoad.height = "40px";
+			gui.addControl(hudLoad);
+			var text1 = new BABYLON.GUI.TextBlock();
+			text1.text = "please wait";
+			text1.top = "60px";
+			text1.color = "white";
+			text1.fontSize = 30;
+			gui.addControl(text1);
 
 
 			camera = new BABYLON.FreeCamera("camera", new BABYLON.Vector3(0, 1, -4), scene);
@@ -258,8 +288,8 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 			var pLight2 = new BABYLON.PointLight("pLight2", new BABYLON.Vector3(0, 8, 0), scene);
 			pLight2.intensity = 0.4;
 
-			var refCube = BABYLON.Mesh.CreateBox("refCube", 1, scene);
-			refCube.position = new BABYLON.Vector3(0, 0, 0);
+			// var refCube = BABYLON.Mesh.CreateBox("refCube", 1, scene);
+			// refCube.position = new BABYLON.Vector3(0, 0, 0);
 
 			// SCENE PREPARATION
 			const galleryIdx = jsonData.length - 1;
@@ -439,23 +469,6 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 			smokeMirror.material = smokeMirrorMaterial;
 
 
-			// GUI
-			hudImgW = 300;
-			hudImgH = 100;
-			gui = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
-			// gui.layer.layerMask = 0x20000000;
-			hudImg = new BABYLON.GUI.Image("hudImg", "./models/solana.jpg");
-			hudImg.width = hudImgW.toString() + "px";
-			hudImg.height = hudImgH.toString() + "px";
-			// hudImg.height = "40px";
-			hudImg.top = (canvas.height / 2) - (hudImgH / 2);
-			gui.addControl(hudImg);
-
-			// scene.onPointerObservable.add(function (pointerInfo, eventState) {
-			// 	console.log('%c PointerObservable: pointer double tap', 'background: blue; color: white');
-			// }, BABYLON.PointerEventTypes.POINTERDOUBLETAP, false);
-
-
 			//LOAD MODELS
 			// var sphere = BABYLON.MeshBuilder.CreateSphere("sphere", { diameter: 1, segments: 4 }, scene);
 			// sphere.position.y = 1;
@@ -465,266 +478,275 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 			console.log("Virtual: " + virtID);
 
 			if (virtID != null) {
-				BABYLON.SceneLoader.ImportMesh("", "./models/", "virtual" + virtID.toString().padStart(2, '0') + ".babylon", scene, function (newMeshes) {
-					newMeshes.forEach((mesh) => {
-						// console.log(mesh.name);
-						// console.log(mesh.position);
-						smokeMirrorMaterial.reflectionTexture.renderList.push(mesh);
-						let idx = parseInt(mesh.name.substring(6)) - 1;
+				Promise.all([
+					BABYLON.SceneLoader.ImportMeshAsync("", "./models/", "virtual" + virtID.toString().padStart(2, '0') + ".babylon", scene).then(function (result) {
+						result.meshes.forEach((mesh) => {
+							// console.log(mesh.name);
+							// console.log(mesh.position);
+							smokeMirrorMaterial.reflectionTexture.renderList.push(mesh);
+							let idx = parseInt(mesh.name.substring(6)) - 1;
 
 
-						//ARTS
-						if (mesh.name.indexOf(artName) > -1) {
+							//ARTS
+							if (mesh.name.indexOf(artName) > -1) {
 
-							//PICK
-							mesh.isPickable = true;
-							mesh.actionManager = new BABYLON.ActionManager(scene);
-							mesh.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger, () => {
-								const pick = scene.pick(scene.pointerX, scene.pointerY);
-								if (BABYLON.Vector3.Distance(camera.position, mesh.position) < 20) {
-									window.open("https://demo.artyste.info/artworks/" + jsonData[idx].id).focus();
-								}
-							}));
-
-							//FRAME
-							let frame = mesh.clone();
-							renderTarget.renderList.push(frame);
-							smokeMirrorMaterial.reflectionTexture.renderList.push(frame);
-
-							frame.name = mesh.name.replace("Asset", "Frame");
-							let matFrame = new BABYLON.StandardMaterial("matFrame", scene);
-							matFrame.diffuseColor = color2;
-							var specColorPwr = 0.3;
-							matFrame.specularPower = 500;
-							matFrame.specularColor = new BABYLON.Color3(specColorPwr, specColorPwr, specColorPwr);
-							frame.material = matFrame;
-
-							mesh.translate(BABYLON.Axis.Y, 0.03, BABYLON.Space.LOCAL);
-
-							if (idx < jsonData.length - 1) {
-								let matArt = new BABYLON.StandardMaterial("matArt", scene);
-								let texArt = new BABYLON.Texture(jsonData[idx].fileimage, scene, false, true, BABYLON.Texture.TRILINEAR_SAMPLINGMODE, function () {
-									var texSize = texArt.getSize();
-									if (texSize.width != 0) { //malformed returns
-										//Scaling ART & FRAME
-										mesh.scaling = new BABYLON.Vector3(1, 0.002, texSize.height / texSize.width);
-										frame.scaling = mesh.scaling;
-										frame.scaling = frame.scaling.multiply(frameScale);
-										frame.scaling.y = 0.02;
+								//PICK
+								mesh.isPickable = true;
+								mesh.actionManager = new BABYLON.ActionManager(scene);
+								mesh.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger, () => {
+									const pick = scene.pick(scene.pointerX, scene.pointerY);
+									if (BABYLON.Vector3.Distance(camera.position, mesh.position) < 20) {
+										window.open("https://demo.artyste.info/artworks/" + jsonData[idx].id).focus();
 									}
-								});
-								matArt.diffuseTexture = texArt;
-								matArt.speculartexture = texArt;
-								var specColorPwr = 0.5;
-								matArt.specularPower = 200;
-								matArt.specularColor = new BABYLON.Color3(specColorPwr, specColorPwr, specColorPwr);
-								mesh.material = matArt;
+								}));
+
+								//FRAME
+								let frame = mesh.clone();
+								renderTarget.renderList.push(frame);
+								smokeMirrorMaterial.reflectionTexture.renderList.push(frame);
+
+								frame.name = mesh.name.replace("Asset", "Frame");
+								let matFrame = new BABYLON.StandardMaterial("matFrame", scene);
+								matFrame.diffuseColor = color2;
+								var specColorPwr = 0.3;
+								matFrame.specularPower = 500;
+								matFrame.specularColor = new BABYLON.Color3(specColorPwr, specColorPwr, specColorPwr);
+								frame.material = matFrame;
+
+								mesh.translate(BABYLON.Axis.Y, 0.03, BABYLON.Space.LOCAL);
+
+								if (idx < jsonData.length - 1) {
+									let matArt = new BABYLON.StandardMaterial("matArt", scene);
+									let texArt = new BABYLON.Texture(jsonData[idx].fileimage, scene, false, true, BABYLON.Texture.TRILINEAR_SAMPLINGMODE, function () {
+										var texSize = texArt.getSize();
+										if (texSize.width != 0) { //malformed returns
+											//Scaling ART & FRAME
+											mesh.scaling = new BABYLON.Vector3(1, 0.002, texSize.height / texSize.width);
+											frame.scaling = mesh.scaling;
+											frame.scaling = frame.scaling.multiply(frameScale);
+											frame.scaling.y = 0.02;
+										}
+									});
+									matArt.diffuseTexture = texArt;
+									matArt.speculartexture = texArt;
+									var specColorPwr = 0.5;
+									matArt.specularPower = 200;
+									matArt.specularColor = new BABYLON.Color3(specColorPwr, specColorPwr, specColorPwr);
+									mesh.material = matArt;
+								}
+								else {
+									frame.scaling = mesh.scaling;
+									frame.scaling = frame.scaling.multiply(frameScale);
+									mesh.material = GetPlaceholder();
+								}
+
+								// mesh.actionManager = new BABYLON.ActionManager(scene);
+								// mesh.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnDoublePickTrigger, (function (mesh) {
+								// 	console.log("%c ActionManager: double pick : " + mesh.name, 'background: green; color: white');
+								// }).bind(this, mesh)));
+
+
+								// mesh.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnDoublePickTrigger, () => {
+								// 	console.log(114);
+								// 	mesh.moveWithCollisions(new BABYLON.Vector3(-1, 0, 0));
+								// }));
+
+
 							}
-							else {
-								frame.scaling = mesh.scaling;
-								frame.scaling = frame.scaling.multiply(frameScale);
-								mesh.material = GetPlaceholder();
+
+							//LOGO
+							if (mesh.name.indexOf("GalleyLogo") > -1) {
+								var matLogo = new BABYLON.StandardMaterial("matLogo", scene);
+								var texLogo = new BABYLON.Texture(jsonData[jsonData.length - 1].gallery.avatar, scene);
+								matLogo.diffuseTexture = texLogo;
+								matLogo.speculartexture = texLogo;
+								matLogo.specularPower = 200;
+								mesh.material = matLogo;
+							}
+							//BANNER
+							if (mesh.name.indexOf("GalleyBanne") > -1) {
+								var matBanner = new BABYLON.StandardMaterial("matBanner", scene);
+								var texBanner = new BABYLON.Texture(jsonData[jsonData.length - 1].gallery.banner, scene);
+								matBanner.diffuseTexture = texBanner;
+								matBanner.speculartexture = texBanner;
+								matBanner.specularPower = 200;
+								mesh.material = matBanner;
+							}
+							//LOGO3D
+							if (mesh.name.indexOf("Logo_Float") > -1) {
+								// mesh.createNormals(true);
+								// mesh.unfreezeNormals();
+								logoFloat = mesh;
+								var logoMatMulti = new BABYLON.MultiMaterial("logoMatMulti", scene);
+								// logoMatMulti.subMaterials.push(material0);
+								// logoMatMulti.subMaterials.push(material1);
+								// logoMatMulti.subMaterials.push(material2);
+								for (let index = 0; index < mesh.subMeshes.length; index++) {
+									const element = mesh.subMeshes[index];
+									// element.material = CreateSBMaterial[index];
+									element.materialIndex = index;
+									let mat = new BABYLON.StandardMaterial("matLogoFloat", scene);
+									mat.diffuseColor = logoColors[index];
+									mat.specularPower = 300;
+									// logoMatMulti.subMaterials.push(CreateSBMaterial(index));
+									logoMatMulti.subMaterials.push(mat);
+								}
+								mesh.material = logoMatMulti;
+
+								// for (let index = 0; index < mesh.subMeshes.length; index++) {
+								// 	const element = array[index];
+								// 	scene.getMaterialByName("Material #" + (index + 16).toString()) = ;
+								// }
 							}
 
-							// mesh.actionManager = new BABYLON.ActionManager(scene);
-							// mesh.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnDoublePickTrigger, (function (mesh) {
-							// 	console.log("%c ActionManager: double pick : " + mesh.name, 'background: green; color: white');
-							// }).bind(this, mesh)));
+							if (mesh.name.indexOf("glass") > -1) {
 
-
-							// mesh.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnDoublePickTrigger, () => {
-							// 	console.log(114);
-							// 	mesh.moveWithCollisions(new BABYLON.Vector3(-1, 0, 0));
-							// }));
-
-
-						}
-
-						//LOGO
-						if (mesh.name.indexOf("GalleyLogo") > -1) {
-							var matLogo = new BABYLON.StandardMaterial("matLogo", scene);
-							var texLogo = new BABYLON.Texture(jsonData[jsonData.length - 1].gallery.avatar, scene);
-							matLogo.diffuseTexture = texLogo;
-							matLogo.speculartexture = texLogo;
-							matLogo.specularPower = 200;
-							mesh.material = matLogo;
-						}
-						//BANNER
-						if (mesh.name.indexOf("GalleyBanne") > -1) {
-							var matBanner = new BABYLON.StandardMaterial("matBanner", scene);
-							var texBanner = new BABYLON.Texture(jsonData[jsonData.length - 1].gallery.banner, scene);
-							matBanner.diffuseTexture = texBanner;
-							matBanner.speculartexture = texBanner;
-							matBanner.specularPower = 200;
-							mesh.material = matBanner;
-						}
-						//LOGO3D
-						if (mesh.name.indexOf("Logo_Float") > -1) {
-							// mesh.createNormals(true);
-							// mesh.unfreezeNormals();
-							logoFloat = mesh;
-							var logoMatMulti = new BABYLON.MultiMaterial("logoMatMulti", scene);
-							// logoMatMulti.subMaterials.push(material0);
-							// logoMatMulti.subMaterials.push(material1);
-							// logoMatMulti.subMaterials.push(material2);
-							for (let index = 0; index < mesh.subMeshes.length; index++) {
-								const element = mesh.subMeshes[index];
-								// element.material = CreateSBMaterial[index];
-								element.materialIndex = index;
-								let mat = new BABYLON.StandardMaterial("matLogoFloat", scene);
-								mat.diffuseColor = logoColors[index];
-								mat.specularPower = 300;
-								// logoMatMulti.subMaterials.push(CreateSBMaterial(index));
-								logoMatMulti.subMaterials.push(mat);
 							}
-							mesh.material = logoMatMulti;
-
-							// for (let index = 0; index < mesh.subMeshes.length; index++) {
-							// 	const element = array[index];
-							// 	scene.getMaterialByName("Material #" + (index + 16).toString()) = ;
-							// }
-						}
-
-						if (mesh.name.indexOf("glass") > -1) {
-
-						}
-						if (mesh.name.indexOf("aterFall") > -1) {
-							//WATER
-							// mesh.visibility = false;
-							// mesh.checkCollisions = true;
-							mesh.material = waterMat;
-							var waterClone = mesh.clone();
-							waterClone.scaling = new BABYLON.Vector3(2, 2, 2);
-							waterClone.checkCollisions = true;
-							waterClone.visibility = false;
-						}
-
-						//WALLS + SCENE
-						//Wall_Master Lightmaps
-						if (mesh.name.indexOf("Wall_Master") > -1) {
-							let mat = new BABYLON.StandardMaterial("mat_Wall_Master", scene);
-							let tex = new BABYLON.Texture("./models/Wall_Master_Arnold_RGBA.jpg", scene);
-							mat.lightmapTexture = tex;
-							mat.lightmapTexture.coordinatesIndex = 0;
-							mat.useLightmapAsShadowmap = true;
-							mat.ambientColor = BABYLON.Color3.White();
-							mat.specularColor = new BABYLON.Color3(0.3, 0.3, 0.3);
-							mesh.material = mat;
-
-							mesh.checkCollisions = true;
-						}
-
-						if (mesh.name.indexOf("Wall_0") > -1) {
-							let mat = new BABYLON.StandardMaterial("mat_Wall_0", scene);
-							let tex = new BABYLON.Texture("./models/Wall_01_Arnold_RGBA.jpg", scene);
-							mat.lightmapTexture = tex;
-							mat.lightmapTexture.coordinatesIndex = 0;
-							mat.useLightmapAsShadowmap = true;
-							mat.ambientColor = BABYLON.Color3.White();
-							// mat.specularColor = BABYLON.Color3.White();
-							mesh.material = mat;
-
-							mesh.checkCollisions = true;
-						}
-						if (mesh.name.indexOf("Bench_Center") > -1) {
-							let mat = new BABYLON.StandardMaterial("mat_Bench_Center", scene);
-							let tex = new BABYLON.Texture("./models/Bench_Center_Arnold_RGBA.jpg", scene);
-							mat.lightmapTexture = tex;
-							mat.lightmapTexture.coordinatesIndex = 0;
-							mat.useLightmapAsShadowmap = true;
-							mat.ambientColor = BABYLON.Color3.White();
-							// mat.specularColor = BABYLON.Color3.White();
-							mesh.material = mat;
-
-							mesh.checkCollisions = true;
-						}
-						if (mesh.name.indexOf("Bench_001") > -1) {
-							var logoMatMulti = new BABYLON.MultiMaterial("benchMatMulti", scene);
-							for (let index = 0; index < mesh.subMeshes.length; index++) {
-								const element = mesh.subMeshes[index];
-								// element.material = CreateSBMaterial[index];
-								element.materialIndex = index;
-								let mat = new BABYLON.StandardMaterial("matBench", scene);
-								mat.diffuseColor = index == 0 ? new BABYLON.Color3(200 / 255, 160 / 255, 130 / 255) : new BABYLON.Color3(0.1, 0.1, 0.1);
-								mat.specularPower = 300;
-								// logoMatMulti.subMaterials.push(CreateSBMaterial(index));
-								logoMatMulti.subMaterials.push(mat);
+							if (mesh.name.indexOf("aterFall") > -1) {
+								//WATER
+								// mesh.visibility = false;
+								// mesh.checkCollisions = true;
+								mesh.material = waterMat;
+								var waterClone = mesh.clone();
+								waterClone.scaling = new BABYLON.Vector3(2, 2, 2);
+								waterClone.checkCollisions = true;
+								waterClone.visibility = false;
 							}
-							mesh.material = logoMatMulti;
 
-						}
+							//WALLS + SCENE
+							//Wall_Master Lightmaps
+							if (mesh.name.indexOf("Wall_Master") > -1) {
+								let mat = new BABYLON.StandardMaterial("mat_Wall_Master", scene);
+								let tex = new BABYLON.Texture("./models/Wall_Master_Arnold_RGBA.jpg", scene);
+								mat.lightmapTexture = tex;
+								mat.lightmapTexture.coordinatesIndex = 0;
+								mat.useLightmapAsShadowmap = true;
+								mat.ambientColor = BABYLON.Color3.White();
+								mat.specularColor = new BABYLON.Color3(0.3, 0.3, 0.3);
+								mesh.material = mat;
 
+								mesh.checkCollisions = true;
+							}
 
-						if (mesh.name.indexOf("Logo_Solana") > -1) {
-							logoSolana = mesh;
-							let mat = new BABYLON.StandardMaterial("mat_Logo_Solana", scene);
-							let tex = new BABYLON.Texture("./models/solana.jpg", scene);
-							mat.lightmapTexture = tex;
-							mat.lightmapTexture.coordinatesIndex = 0;
-							mat.useLightmapAsShadowmap = true;
-							mat.ambientColor = BABYLON.Color3.White();
-							mesh.material = mat;
+							if (mesh.name.indexOf("Wall_0") > -1) {
+								let mat = new BABYLON.StandardMaterial("mat_Wall_0", scene);
+								let tex = new BABYLON.Texture("./models/Wall_01_Arnold_RGBA.jpg", scene);
+								mat.lightmapTexture = tex;
+								mat.lightmapTexture.coordinatesIndex = 0;
+								mat.useLightmapAsShadowmap = true;
+								mat.ambientColor = BABYLON.Color3.White();
+								// mat.specularColor = BABYLON.Color3.White();
+								mesh.material = mat;
 
-							mesh.checkCollisions = true;
-						}
-						if (mesh.name.indexOf("Logo_Metaplex") > -1) {
-							logoMetaplex = mesh;
-							let mat = new BABYLON.StandardMaterial("mat_Logo_Metaplex", scene);
-							mat.diffuseColor = BABYLON.Color3.White();
-							mesh.material = mat;
+								mesh.checkCollisions = true;
+							}
+							if (mesh.name.indexOf("Bench_Center") > -1) {
+								let mat = new BABYLON.StandardMaterial("mat_Bench_Center", scene);
+								let tex = new BABYLON.Texture("./models/Bench_Center_Arnold_RGBA.jpg", scene);
+								mat.lightmapTexture = tex;
+								mat.lightmapTexture.coordinatesIndex = 0;
+								mat.useLightmapAsShadowmap = true;
+								mat.ambientColor = BABYLON.Color3.White();
+								// mat.specularColor = BABYLON.Color3.White();
+								mesh.material = mat;
 
-							mesh.checkCollisions = true;
-						}
+								mesh.checkCollisions = true;
+							}
+							if (mesh.name.indexOf("Bench_001") > -1) {
+								var logoMatMulti = new BABYLON.MultiMaterial("benchMatMulti", scene);
+								for (let index = 0; index < mesh.subMeshes.length; index++) {
+									const element = mesh.subMeshes[index];
+									// element.material = CreateSBMaterial[index];
+									element.materialIndex = index;
+									let mat = new BABYLON.StandardMaterial("matBench", scene);
+									mat.diffuseColor = index == 0 ? new BABYLON.Color3(200 / 255, 160 / 255, 130 / 255) : new BABYLON.Color3(0.1, 0.1, 0.1);
+									mat.specularPower = 300;
+									// logoMatMulti.subMaterials.push(CreateSBMaterial(index));
+									logoMatMulti.subMaterials.push(mat);
+								}
+								mesh.material = logoMatMulti;
 
-						//DOORS
-						if (mesh.name.indexOf("Wall_Glass") > -1) {
-							wallGlass = mesh;
-							mesh.checkCollisions = true;
-							// ApplyGlassMaterial(mesh);
-							mesh.material = fumeMat;
-							mesh.alphaIndex = 1001;
-
-
-						}
-						if (mesh.name.indexOf("Door_Glass_01_L") > -1) {
-							wallL = mesh;
-							mesh.material = doorMat;
-
-						}
-						if (mesh.name.indexOf("Door_Glass_01_R") > -1) {
-							wallR = mesh;
-							mesh.material = doorMat;
-							// console.log(mesh.alphaIndex);
-							// mesh.alphaIndex = 999;
-						}
-
-						if (mesh.name.indexOf("Plant_") > -1) {
-							mesh.material = matPlants;
-						}
-
-
-						if (mesh.name.indexOf("Start") > -1) {
-							mesh.position = new BABYLON.Vector3(mesh.position.x, camHeight, mesh.position.z);
-							mesh.translate(BABYLON.Axis.Z, -4, BABYLON.Space.LOCAL);
-							camera.position = mesh.position;
-						}
+							}
 
 
-						//ALL MESHES
-						if (mesh.name.indexOf("aterFall") < 0) {
-							renderTarget.renderList.push(mesh);
-						}
+							if (mesh.name.indexOf("Logo_Solana") > -1) {
+								logoSolana = mesh;
+								let mat = new BABYLON.StandardMaterial("mat_Logo_Solana", scene);
+								let tex = new BABYLON.Texture("./models/solana.jpg", scene);
+								mat.lightmapTexture = tex;
+								mat.lightmapTexture.coordinatesIndex = 0;
+								mat.useLightmapAsShadowmap = true;
+								mat.ambientColor = BABYLON.Color3.White();
+								mesh.material = mat;
 
-						if (mesh.name.indexOf("Wall_Glass") < 0 && mesh.name.indexOf("Door_Glass_01_L") < 0 && mesh.name.indexOf("Door_Glass_01_R") < 0) {
-							// mirrorMaterial.reflectionTexture.renderList.push(mesh);
-						}
-					});
+								mesh.checkCollisions = true;
+							}
+							if (mesh.name.indexOf("Logo_Metaplex") > -1) {
+								logoMetaplex = mesh;
+								let mat = new BABYLON.StandardMaterial("mat_Logo_Metaplex", scene);
+								mat.diffuseColor = BABYLON.Color3.White();
+								mesh.material = mat;
+
+								mesh.checkCollisions = true;
+							}
+
+							//DOORS
+							if (mesh.name.indexOf("Wall_Glass") > -1) {
+								wallGlass = mesh;
+								mesh.checkCollisions = true;
+								// ApplyGlassMaterial(mesh);
+								mesh.material = fumeMat;
+								mesh.alphaIndex = 1001;
+
+
+							}
+							if (mesh.name.indexOf("Door_Glass_01_L") > -1) {
+								wallL = mesh;
+								mesh.material = doorMat;
+
+							}
+							if (mesh.name.indexOf("Door_Glass_01_R") > -1) {
+								wallR = mesh;
+								mesh.material = doorMat;
+								// console.log(mesh.alphaIndex);
+								// mesh.alphaIndex = 999;
+							}
+
+							if (mesh.name.indexOf("Plant_") > -1) {
+								mesh.material = matPlants;
+							}
+
+
+							if (mesh.name.indexOf("Start") > -1) {
+								mesh.position = new BABYLON.Vector3(mesh.position.x, camHeight, mesh.position.z);
+								mesh.translate(BABYLON.Axis.Z, -4, BABYLON.Space.LOCAL);
+								camera.position = mesh.position;
+							}
+
+
+							//ALL MESHES
+							if (mesh.name.indexOf("aterFall") < 0) {
+								renderTarget.renderList.push(mesh);
+							}
+
+							if (mesh.name.indexOf("Wall_Glass") < 0 && mesh.name.indexOf("Door_Glass_01_L") < 0 && mesh.name.indexOf("Door_Glass_01_R") < 0) {
+								// mirrorMaterial.reflectionTexture.renderList.push(mesh);
+							}
+						});
 
 
 
 
 
-					FinishSceneImport();
+						FinishSceneImport();
+					})
+				]).then(() => {
+					// scene.createDefaultCameraOrLight(true, true, true);
+					// scene.activeCamera.alpha += Math.PI;
+					console.log(124536736)
+					hudBG.isVisible = false;
+					hudLoad.isVisible = false;
+					text1.isVisible = false;
 				});
 
 			}
@@ -875,6 +897,8 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 					deltaTime = engine.getDeltaTime() * 0.001;
 					totalTime += deltaTime;
 					// camera.position.y = 1.8;
+
+					hudLoad.rotation = totalTime * 4;
 
 					//LOGOS
 					if (logoFloat != null) {
