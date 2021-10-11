@@ -165,6 +165,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 		var mirrorMeshes = [];
 		var fumeMat = null;
 		var doorMat = null;
+		var matPlants = null
 
 		var time = 0;
 		var SB = BABYLONX.ShaderBuilder;
@@ -247,13 +248,183 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 			var refCube = BABYLON.Mesh.CreateBox("refCube", 1, scene);
 			refCube.position = new BABYLON.Vector3(0, 0, 0);
 
-
+			// SCENE PREPARATION
 			const galleryIdx = jsonData.length - 1;
 			const color1 = jsonData[galleryIdx].gallery.color1 != null ? new BABYLON.Color3.FromHEXString(jsonData[galleryIdx].gallery.color1) : BABYLON.Color3.White();
 			const color2 = jsonData[galleryIdx].gallery.color2 != null ? new BABYLON.Color3.FromHEXString(jsonData[galleryIdx].gallery.color2) : BABYLON.Color3.Black();
 			const color3 = jsonData[galleryIdx].gallery.color3 != null ? new BABYLON.Color3.FromHEXString(jsonData[galleryIdx].gallery.color3) : BABYLON.Color3.White();
 
 			const virtID = jsonData[galleryIdx].gallery.virtual != null ? jsonData[galleryIdx].gallery.virtual : 1;
+
+
+			//SHADERS & MATERIALS
+			BABYLON.Effect.ShadersStore["waterVertexShader"] = `   
+				precision highp float;
+
+				attribute vec3 position;
+				attribute vec3 normal;
+				attribute vec2 uv;
+				
+				uniform mat4 world;
+				uniform mat4 worldView;
+				uniform mat4 worldViewProjection;
+				uniform mat4 view;
+				uniform mat4 projection;
+				uniform float time;
+
+				varying vec2 vUV;
+				varying vec2 vSP;
+
+				void main(void) {
+
+					// vec4 posW = dModelMatrix * vec4(localPos, 1.0);
+					vec4 posW = worldViewProjection * vec4(position, 1.0);
+					
+					// posW.zw = vec2(0.0, 1.0);
+					
+
+
+					vec4 screenPos;
+					
+						screenPos = vec4(uv.xy * 2.0 - 1.0, 0.5, 1);
+									
+						screenPos = view * posW;
+					
+
+
+					vec3 p = position;
+					// p.x = p.x + sin(2.0 * position.y + time*5.);
+					// p.y = p.y + sin(time*5. + 4.0);
+
+					gl_Position = worldViewProjection * vec4(p, 1.0);
+					
+					vec3 ndc = gl_Position.xyz / gl_Position.w;
+					vec2 viewportCoord = ndc.xy * 0.5 + 0.5; //ndc is -1 to 1 in GL. scale for 0 to 1
+					vec2 viewportPixelCoord = viewportCoord * vec2(1, 1);
+					
+					vUV = uv;
+					vSP = viewportPixelCoord;
+				}`;
+
+			BABYLON.Effect.ShadersStore["waterFragmentShader"] = `
+				precision highp float;
+				
+				uniform sampler2D texTarget;
+				uniform sampler2D texNormal;
+				uniform float time;
+				uniform mat4 world;
+				uniform mat4 worldView;
+				uniform mat4 worldViewProjection;
+				uniform mat4 view;
+				uniform mat4 projection;
+
+				varying vec2 vUV;
+				varying vec2 vSP;
+
+				void main(void) {
+					vec2 vSP = vSP;
+					vec4 normTex = texture2D(texNormal, vec2(5.*vUV.x, 1.*vUV.y+time*0.5));
+					// vSP.y += time*2.;
+					vSP.x += (normTex.x-0.5) *0.1;
+					vSP.y += (normTex.y-0.5) *0.1;
+					// vSP.x += texture2D(texNormal, vSP).x;
+					gl_FragColor = texture2D(texTarget, vSP);
+					// gl_FragColor.z = 1.0 - gl_FragColor.z;
+					gl_FragColor.a = 1.0;
+					gl_FragColor.g += 0.05;
+					gl_FragColor.b += 0.15;
+    		}`;
+
+			waterMat = new BABYLON.ShaderMaterial("shader", scene, {
+				vertex: "water",
+				fragment: "water",
+			},
+				{
+					attributes: ["position", "normal", "uv"],
+					uniforms: ["world", "worldView", "worldViewProjection", "view", "projection, time"],
+					needAlphaBlending: true,
+				});
+			renderTarget = new BABYLON.RenderTargetTexture("scene", 1024, scene, true);
+			renderTarget.lodGenerationScale = 0.5;
+			renderTarget.depth = 0.5;
+			renderTarget.wrapU = 2;
+			renderTarget.wrapV = 2;
+			scene.customRenderTargets.push(renderTarget);
+			waterMat.setTexture("texTarget", renderTarget);
+			waterMat.setTexture("texNormal", new BABYLON.Texture("./tex/waterbump.png", scene));
+
+
+			fumeMat = new BABYLON.StandardMaterial("fumeMat", scene);
+			fumeMat.diffuseColor = BABYLON.Color3.Black();
+			var specColorPwr = 0.2;
+			fumeMat.specularPower = 500;
+			fumeMat.specularColor = new BABYLON.Color3(specColorPwr, specColorPwr, specColorPwr);
+			fumeMat.alpha = 0.9;
+
+			doorMat = new BABYLON.StandardMaterial("doorMat", scene);
+			doorMat.diffuseColor = new BABYLON.Color3(1, 1, 1);
+			var specColorPwr = 1;
+			doorMat.specularPower = 300;
+			doorMat.specularColor = new BABYLON.Color3(specColorPwr, specColorPwr, specColorPwr);
+			doorMat.alpha = 0.4;
+			doorMat.useSpecularOverAlpha = true;
+
+
+
+			// Skybox
+			var skybox = BABYLON.Mesh.CreateBox("skyBox", 1000.0, scene);
+			var skyboxMaterial = new BABYLON.StandardMaterial("skyBox", scene);
+			skyboxMaterial.backFaceCulling = false;
+			skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("https://playground.babylonjs.com/textures/TropicalSunnyDay", scene);
+			skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
+			skyboxMaterial.diffuseColor = BABYLON.Color3.Black();
+			skyboxMaterial.specularColor = BABYLON.Color3.Black();
+			skyboxMaterial.disableLighting = true;
+			skybox.material = skyboxMaterial;
+			renderTarget.renderList.push(skybox);
+
+			//Plants
+			matPlants = new BABYLON.StandardMaterial("plant", scene);
+			matPlants.diffuseTexture = new BABYLON.Texture("./models/Plants.png", scene);
+			matPlants.diffuseTexture.hasAlpha = true;
+			matPlants.specularPower = 100;
+			matPlants.specularColor = new BABYLON.Color3(0.2, 0.3, 0.2);
+			// matPlants.ambientColor = new BABYLON.Color3.Green();
+
+
+			//Creation of a glass planes
+			var smokeMirror = BABYLON.MeshBuilder.CreatePlane("smokeMirror", { width: 20, height: 20 }, scene);
+			smokeMirror.position = new BABYLON.Vector3(23, 6.4, 10);
+			smokeMirror.rotation = new BABYLON.Vector3(270 / 180 * Math.PI, 0, 60 / 180 * Math.PI);
+
+			//Ensure working with new values for smokeMirror by computing and obtaining its worldMatrix
+			smokeMirror.computeWorldMatrix(true);
+			var smokeMirror_worldMatrix = smokeMirror.getWorldMatrix();
+
+			//Obtain normals for plane and assign one of them as the normal
+			var smokeMirror_vertexData = smokeMirror.getVerticesData("normal");
+			var smokeMirrorNormal = new BABYLON.Vector3(smokeMirror_vertexData[0], smokeMirror_vertexData[1], smokeMirror_vertexData[2]);
+			//Use worldMatrix to transform normal into its current value
+			smokeMirrorNormal = new BABYLON.Vector3.TransformNormal(smokeMirrorNormal, smokeMirror_worldMatrix)
+
+			//Create reflecting surface for smokeMirror surface
+			var reflector = new BABYLON.Plane.FromPositionAndNormal(smokeMirror.position, smokeMirrorNormal.scale(-1));
+
+			//Create the smokeMirror material
+			var smokeMirrorMaterial = new BABYLON.StandardMaterial("smokeMirror", scene);
+			smokeMirrorMaterial.reflectionTexture = new BABYLON.MirrorTexture("smokeMirror", 1024, scene, true);
+			smokeMirrorMaterial.reflectionTexture.mirrorPlane = reflector;
+			for (let index = 0; index < mirrorMeshes.length; index++) {
+				const element = mirrorMeshes[index];
+				smokeMirrorMaterial.reflectionTexture.renderList.push(element);
+				// console.log(index);
+			}
+			smokeMirrorMaterial.reflectionTexture.level = 0.15;
+			smokeMirrorMaterial.diffuseColor = BABYLON.Color3.Black();
+
+			smokeMirror.material = smokeMirrorMaterial;
+
+
 
 
 			//LOAD MODELS
@@ -425,10 +596,6 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 							}
 							mesh.material = logoMatMulti;
 
-							// for (let index = 0; index < mesh.subMeshes.length; index++) {
-							// 	const element = array[index];
-							// 	scene.getMaterialByName("Material #" + (index + 16).toString()) = ;
-							// }
 						}
 
 
@@ -440,7 +607,6 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 							mat.lightmapTexture.coordinatesIndex = 0;
 							mat.useLightmapAsShadowmap = true;
 							mat.ambientColor = BABYLON.Color3.White();
-							// mat.specularColor = BABYLON.Color3.White();
 							mesh.material = mat;
 
 							mesh.checkCollisions = true;
@@ -448,13 +614,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 						if (mesh.name.indexOf("Logo_Metaplex") > -1) {
 							logoMetaplex = mesh;
 							let mat = new BABYLON.StandardMaterial("mat_Logo_Metaplex", scene);
-							// let tex = new BABYLON.Texture("./models/solana.jpg", scene);
-							// mat.lightmapTexture = tex;
-							// mat.lightmapTexture.coordinatesIndex = 0;
-							// mat.useLightmapAsShadowmap = true;
-							// mat.ambientColor = BABYLON.Color3.White();
 							mat.diffuseColor = BABYLON.Color3.White();
-							// mat.specularColor = BABYLON.Color3.White();
 							mesh.material = mat;
 
 							mesh.checkCollisions = true;
@@ -482,6 +642,10 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 							// mesh.alphaIndex = 999;
 						}
 
+						if (mesh.name.indexOf("Plant_") > -1) {
+							mesh.material = matPlants;
+						}
+
 
 						if (mesh.name.indexOf("Start") > -1) {
 							mesh.position = new BABYLON.Vector3(mesh.position.x, camHeight, mesh.position.z);
@@ -499,60 +663,6 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 							// mirrorMaterial.reflectionTexture.renderList.push(mesh);
 						}
 					});
-
-
-					// Skybox
-					var skybox = BABYLON.Mesh.CreateBox("skyBox", 1000.0, scene);
-					var skyboxMaterial = new BABYLON.StandardMaterial("skyBox", scene);
-					skyboxMaterial.backFaceCulling = false;
-					skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("https://playground.babylonjs.com/textures/TropicalSunnyDay", scene);
-					skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
-					skyboxMaterial.diffuseColor = new BABYLON.Color3.Black();
-					skyboxMaterial.specularColor = new BABYLON.Color3.Black();
-					skyboxMaterial.disableLighting = true;
-					skybox.material = skyboxMaterial;
-					renderTarget.renderList.push(skybox);
-
-
-
-
-
-
-					//Creation of a glass planes
-					var smokeMirror = BABYLON.MeshBuilder.CreatePlane("smokeMirror", { width: 20, height: 20 }, scene);
-					smokeMirror.position = new BABYLON.Vector3(23, 6.4, 10);
-					smokeMirror.rotation = new BABYLON.Vector3(270 / 180 * Math.PI, 0, 60 / 180 * Math.PI);
-
-					//Ensure working with new values for smokeMirror by computing and obtaining its worldMatrix
-					smokeMirror.computeWorldMatrix(true);
-					var smokeMirror_worldMatrix = smokeMirror.getWorldMatrix();
-
-					//Obtain normals for plane and assign one of them as the normal
-					var smokeMirror_vertexData = smokeMirror.getVerticesData("normal");
-					var smokeMirrorNormal = new BABYLON.Vector3(smokeMirror_vertexData[0], smokeMirror_vertexData[1], smokeMirror_vertexData[2]);
-					//Use worldMatrix to transform normal into its current value
-					smokeMirrorNormal = new BABYLON.Vector3.TransformNormal(smokeMirrorNormal, smokeMirror_worldMatrix)
-
-					//Create reflecting surface for smokeMirror surface
-					var reflector = new BABYLON.Plane.FromPositionAndNormal(smokeMirror.position, smokeMirrorNormal.scale(-1));
-
-					//Create the smokeMirror material
-					var smokeMirrorMaterial = new BABYLON.StandardMaterial("smokeMirror", scene);
-					smokeMirrorMaterial.reflectionTexture = new BABYLON.MirrorTexture("smokeMirror", 1024, scene, true);
-					smokeMirrorMaterial.reflectionTexture.mirrorPlane = reflector;
-					for (let index = 0; index < mirrorMeshes.length; index++) {
-						const element = mirrorMeshes[index];
-						smokeMirrorMaterial.reflectionTexture.renderList.push(element);
-						// console.log(index);
-					}
-					smokeMirrorMaterial.reflectionTexture.level = 0.15;
-					smokeMirrorMaterial.diffuseColor = BABYLON.Color3.Black();
-
-					smokeMirror.material = smokeMirrorMaterial;
-
-
-
-
 
 
 
@@ -638,118 +748,6 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 			// camera.translate(BABYLON.Axis.Z, zSpeed, BABYLON.Space.LOCAL);
 			// xSpeed -= brakeSpeed * engine.getDeltaTime();
 			// zSpeed -= brakeSpeed * engine.getDeltaTime();
-
-			//SHADERS & MATERIALS
-			BABYLON.Effect.ShadersStore["waterVertexShader"] = `   
-				precision highp float;
-
-				attribute vec3 position;
-				attribute vec3 normal;
-				attribute vec2 uv;
-				
-				uniform mat4 world;
-				uniform mat4 worldView;
-				uniform mat4 worldViewProjection;
-				uniform mat4 view;
-				uniform mat4 projection;
-				uniform float time;
-
-				varying vec2 vUV;
-				varying vec2 vSP;
-
-				void main(void) {
-
-					// vec4 posW = dModelMatrix * vec4(localPos, 1.0);
-					vec4 posW = worldViewProjection * vec4(position, 1.0);
-					
-					// posW.zw = vec2(0.0, 1.0);
-					
-
-
-					vec4 screenPos;
-					
-						screenPos = vec4(uv.xy * 2.0 - 1.0, 0.5, 1);
-									
-						screenPos = view * posW;
-					
-
-
-					vec3 p = position;
-					// p.x = p.x + sin(2.0 * position.y + time*5.);
-					// p.y = p.y + sin(time*5. + 4.0);
-
-					gl_Position = worldViewProjection * vec4(p, 1.0);
-					
-					vec3 ndc = gl_Position.xyz / gl_Position.w;
-					vec2 viewportCoord = ndc.xy * 0.5 + 0.5; //ndc is -1 to 1 in GL. scale for 0 to 1
-					vec2 viewportPixelCoord = viewportCoord * vec2(1, 1);
-					
-					vUV = uv;
-					vSP = viewportPixelCoord;
-				}`;
-
-			BABYLON.Effect.ShadersStore["waterFragmentShader"] = `
-				precision highp float;
-				
-				uniform sampler2D texTarget;
-				uniform sampler2D texNormal;
-				uniform float time;
-				uniform mat4 world;
-				uniform mat4 worldView;
-				uniform mat4 worldViewProjection;
-				uniform mat4 view;
-				uniform mat4 projection;
-
-				varying vec2 vUV;
-				varying vec2 vSP;
-
-				void main(void) {
-					vec2 vSP = vSP;
-					vec4 normTex = texture2D(texNormal, vec2(5.*vUV.x, 1.*vUV.y+time*0.5));
-					// vSP.y += time*2.;
-					vSP.x += (normTex.x-0.5) *0.1;
-					vSP.y += (normTex.y-0.5) *0.1;
-					// vSP.x += texture2D(texNormal, vSP).x;
-					gl_FragColor = texture2D(texTarget, vSP);
-					// gl_FragColor.z = 1.0 - gl_FragColor.z;
-					gl_FragColor.a = 1.0;
-					gl_FragColor.g += 0.05;
-					gl_FragColor.b += 0.15;
-    		}`;
-
-			waterMat = new BABYLON.ShaderMaterial("shader", scene, {
-				vertex: "water",
-				fragment: "water",
-			},
-				{
-					attributes: ["position", "normal", "uv"],
-					uniforms: ["world", "worldView", "worldViewProjection", "view", "projection, time"],
-					needAlphaBlending: true,
-				});
-			renderTarget = new BABYLON.RenderTargetTexture("scene", 1024, scene, true);
-			renderTarget.lodGenerationScale = 0.5;
-			renderTarget.depth = 0.5;
-			renderTarget.wrapU = 2;
-			renderTarget.wrapV = 2;
-			scene.customRenderTargets.push(renderTarget);
-			waterMat.setTexture("texTarget", renderTarget);
-			waterMat.setTexture("texNormal", new BABYLON.Texture("./tex/waterbump.png", scene));
-
-
-			fumeMat = new BABYLON.StandardMaterial("fumeMat", scene);
-			fumeMat.diffuseColor = BABYLON.Color3.Black();
-			var specColorPwr = 0.2;
-			fumeMat.specularPower = 500;
-			fumeMat.specularColor = new BABYLON.Color3(specColorPwr, specColorPwr, specColorPwr);
-			fumeMat.alpha = 0.9;
-
-			doorMat = new BABYLON.StandardMaterial("doorMat", scene);
-			doorMat.diffuseColor = new BABYLON.Color3(1, 1, 1);
-			var specColorPwr = 1;
-			doorMat.specularPower = 300;
-			doorMat.specularColor = new BABYLON.Color3(specColorPwr, specColorPwr, specColorPwr);
-			doorMat.alpha = 0.4;
-			doorMat.useSpecularOverAlpha = true;
 
 
 
