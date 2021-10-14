@@ -549,7 +549,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 												mesh.scaling = new BABYLON.Vector3(texSize.width / texSize.height * artSizeMax, 0.002, artSizeMax);
 											}
 											else {
-												mesh.scaling = new BABYLON.Vector3(artSizeMax, 0.002, texSize.height / texSize.width * artSizeMax);
+												mesh.scaling = new BABYLON.Vector3(artSizeMax * 1.1, 0.002, texSize.height / texSize.width * artSizeMax * 1.1);
 											}
 											frame.scaling = mesh.scaling;
 											frame.scaling = frame.scaling.multiply(frameScale);
