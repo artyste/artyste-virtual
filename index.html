@@ -232,9 +232,9 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 			// GUI
 			gui = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
 			// gui.layer.layerMask = 0x20000000;
-			hudImgW = 300;
-			hudImgH = 100;
-			hudImg = new BABYLON.GUI.Image("hudImg", "./tex/artyste.png");
+			hudImgW = 511 * 0.6;
+			hudImgH = 144 * 0.6;
+			hudImg = new BABYLON.GUI.Image("hudImg", "./tex/label.png");
 			hudImg.width = hudImgW.toString() + "px";
 			hudImg.height = hudImgH.toString() + "px";
 			// hudImg.height = "40px";
@@ -518,7 +518,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 									// if (pick && BABYLON.Vector2.Distance(pick.pickedPoint, scene.pick(scene.pointerX, scene.pointerY).pickedPoint) < 0.2 && BABYLON.Vector3.Distance(camera.position, mesh.position) < 20) {
 									// 	window.open("https://demo.artyste.info/artworks/" + jsonData[idx].id).focus();
 									// }
-									if (e.sourceEvent.button === 0 && jsonData[idx].id) {
+									if (e.sourceEvent.button === 0 && idx < jsonData.length - 1) {
 										window.open("https://demo.artyste.info/artworks/" + jsonData[idx].id).focus();
 									}
 								}));
@@ -585,6 +585,8 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 								matLogo.speculartexture = texLogo;
 								matLogo.specularPower = 200;
 								mesh.material = matLogo;
+								mesh.scaling.x *= 1.5;
+								mesh.scaling.z *= 1.5;
 							}
 							//BANNER
 							if (mesh.name.indexOf("GalleyBanne") > -1) {
