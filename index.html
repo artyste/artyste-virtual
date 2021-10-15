@@ -98,7 +98,7 @@
 				.Map({ path: './tex/hdri.jpg' })
 				// enviroment map in txtRef_0 sampler
 				//https://i.imgur.com/4LudcMp.jpg normal map
-				.InLine(`vec3 new_nrm =nrm; 
+				.InLine(`vec3 new_nrm =nrm;
 
 				vec3 color1 = vec3(1.,1.,0. );
 				vec3 color2 =   vec3(`+ logoColorsStr[idx] + `);
@@ -108,12 +108,12 @@
 				float ns  = noise(r_y(pos*200.,camera.y*0.1+1.1,vec3(0.)))*0.2+0.2 ;
 				float ns2  = noise(r_y(pos*400.,camera.x*0.1+1.1,vec3(0.)))*0.82 ;
 
-				float height_map = 0.; 
-				vec3 diff = vec3(1.)*(ns*0.1+0.9); 
+				float height_map = 0.;
+				vec3 diff = vec3(1.)*(ns*0.1+0.9);
 
-				float roughness = (0.5+ns*0.5)*9.- (noise(pos*0.1)*0.5 )*5. ; 
+				float roughness = (0.5+ns*0.5)*9.- (noise(pos*0.1)*0.5 )*5. ;
 
-				float metallic = 1.-ns ; 
+				float metallic = 1.-ns ;
 				float fs =  min(1.,max(0., pow(dot(normalize(camera-pos),new_nrm),1.)*1.));`)
 
 				.InLine(reflectPart(
@@ -262,9 +262,10 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 
 			camera = new BABYLON.FreeCamera("camera", new BABYLON.Vector3(0, 1, -4), scene);
 			camera.fov = 1;
-			camera.checkCollisions = true;
-			camera.applyGravity = true;
-			camera.ellipsoid = new BABYLON.Vector3(0.4, camHeight / 2, 0.4);
+			camera.checkCollisions = false;
+			camera.applyGravity = false;
+			// camera.ellipsoid = new BABYLON.Vector3(0.4, camHeight / 2, 0.4);
+
 			// scene.activeCameras.push(camera);
 
 			// cameraGUI = new BABYLON.FreeCamera("camera", new BABYLON.Vector3(0, 1, -4), scene);
@@ -318,13 +319,13 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 
 
 			//SHADERS & MATERIALS
-			BABYLON.Effect.ShadersStore["waterVertexShader"] = `   
+			BABYLON.Effect.ShadersStore["waterVertexShader"] = `
 				precision highp float;
 
 				attribute vec3 position;
 				attribute vec3 normal;
 				attribute vec2 uv;
-				
+
 				uniform mat4 world;
 				uniform mat4 worldView;
 				uniform mat4 worldViewProjection;
@@ -339,17 +340,17 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 
 					// vec4 posW = dModelMatrix * vec4(localPos, 1.0);
 					vec4 posW = worldViewProjection * vec4(position, 1.0);
-					
+
 					// posW.zw = vec2(0.0, 1.0);
-					
+
 
 
 					vec4 screenPos;
-					
+
 						screenPos = vec4(uv.xy * 2.0 - 1.0, 0.5, 1);
-									
+
 						screenPos = view * posW;
-					
+
 
 
 					vec3 p = position;
@@ -357,18 +358,18 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 					// p.y = p.y + sin(time*5. + 4.0);
 
 					gl_Position = worldViewProjection * vec4(p, 1.0);
-					
+
 					vec3 ndc = gl_Position.xyz / gl_Position.w;
 					vec2 viewportCoord = ndc.xy * 0.5 + 0.5; //ndc is -1 to 1 in GL. scale for 0 to 1
 					vec2 viewportPixelCoord = viewportCoord * vec2(1, 1);
-					
+
 					vUV = uv;
 					vSP = viewportPixelCoord;
 				}`;
 
 			BABYLON.Effect.ShadersStore["waterFragmentShader"] = `
 				precision highp float;
-				
+
 				uniform sampler2D texTarget;
 				uniform sampler2D texNormal;
 				uniform float time;
