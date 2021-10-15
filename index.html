@@ -263,9 +263,8 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 			camera = new BABYLON.FreeCamera("camera", new BABYLON.Vector3(0, 1, -4), scene);
 			camera.fov = 1;
 			camera.checkCollisions = false;
-			camera.applyGravity = false;
-			// camera.ellipsoid = new BABYLON.Vector3(0.4, camHeight / 2, 0.4);
-
+			camera.applyGravity = true;
+			camera.ellipsoid = new BABYLON.Vector3(0.4, camHeight / 2, 0.4);
 			// scene.activeCameras.push(camera);
 
 			// cameraGUI = new BABYLON.FreeCamera("camera", new BABYLON.Vector3(0, 1, -4), scene);
@@ -603,7 +602,6 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 								matBanner.speculartexture = texBanner;
 								matBanner.specularPower = 200;
 								mesh.material = matBanner;
-								mesh.scaling = BABYLON.Vector3.Zero();
 							}
 							//LOGO3D
 							if (mesh.name.indexOf("Logo_Float") > -1) {
