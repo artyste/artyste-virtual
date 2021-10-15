@@ -262,7 +262,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 
 			camera = new BABYLON.FreeCamera("camera", new BABYLON.Vector3(0, 1, -4), scene);
 			camera.fov = 1;
-			camera.checkCollisions = false;
+			camera.checkCollisions = true;
 			camera.applyGravity = true;
 			camera.ellipsoid = new BABYLON.Vector3(0.4, camHeight / 2, 0.4);
 			// scene.activeCameras.push(camera);
