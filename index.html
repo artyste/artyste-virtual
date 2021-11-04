@@ -204,6 +204,8 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 		var ground;
 		var floor;
 
+		var aterFall;
+
 		var time = 0;
 		var SB = BABYLONX.ShaderBuilder;
 		var SBP = BABYLONX.Shader.Print;
@@ -670,6 +672,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 								waterClone.scaling = new BABYLON.Vector3(2, 2, 2);
 								waterClone.checkCollisions = true;
 								waterClone.visibility = false;
+								aterFall = mesh;
 							}
 
 							//WALLS + SCENE
@@ -991,6 +994,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 			xrHelper.baseExperience.onStateChangedObservable.add((state) => {
 				if (state === BABYLON.WebXRState.IN_XR) {
 					vrCam.position.y = vrHeight;
+					aterFall.visibility = 0;
 				}
 			});
 			vrCam.onAfterCameraTeleport.add((targetPosition) => {
