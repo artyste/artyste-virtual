@@ -95,6 +95,7 @@
 			}
 			placeHolderMat = new BABYLON.StandardMaterial("placeHolderMat", scene);
 			placeHolderMat.diffuseTexture = placeHolderTex;
+			placeHolderMat.diffuseColor = new BABYLON.Color3(BABYLON.Scalar.RandomRange(0.5, 1), BABYLON.Scalar.RandomRange(0.5, 1), BABYLON.Scalar.RandomRange(0.5, 1));
 			placeHolderMat.speculartexture = placeHolderTex;
 			let specColorPwr = 0.5;
 			placeHolderMat.specularPower = 50;
