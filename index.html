@@ -842,24 +842,20 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 			}
 
 			//LOAD AUDIO
-			var music = new BABYLON.Sound("music", "audio/music.mp3", scene, function () {
-				console.log("music laoded!!");
+			var music = new BABYLON.Sound("music", "audio/jungle.ogg", scene, function () {
 				music.setPosition(new BABYLON.Vector3(0, 2, 0));
-				music.play();
 			}, {
-				volume: 0.8,
+				volume: 0.4,
 				loop: true,
 				autoplay: true,
-				spatialSound: true,
+				spatialSound: false,
 				distanceModel: "exponential",
 				rolloffFactor: 0.4
 			});
-			var chat = new BABYLON.Sound("chat", "audio/chat.mp3", scene, function () {
-				console.log("chat laoded!!");
+			var chat = new BABYLON.Sound("chat", "audio/monkeys.ogg", scene, function () {
 				chat.setPosition(new BABYLON.Vector3(-10, 5, 0));
-				chat.play();
 			}, {
-				volume: 0.5,
+				volume: 0.8,
 				loop: true,
 				autoplay: true,
 				spatialSound: true,
