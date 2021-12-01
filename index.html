@@ -538,12 +538,13 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 							if (mesh.name.indexOf(artName) > -1) {
 
 								//PICK
-								mesh.isPickable = true;
+								// mesh.isPickable = true;
 								mesh.actionManager = new BABYLON.ActionManager(scene);
 								// mesh.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnLeftPickTrigger, () => {
 								// 	// pickMesh = mesh;
 								// 	pick = scene.pick(scene.pointerX, scene.pointerY);
 								// }));
+								
 								mesh.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger, (e) => {
 									// const pick = scene.pick(scene.pointerX, scene.pointerY);
 									// if (pick && BABYLON.Vector2.Distance(pick.pickedPoint, scene.pick(scene.pointerX, scene.pointerY).pickedPoint) < 0.2 && BABYLON.Vector3.Distance(camera.position, mesh.position) < 20) {
