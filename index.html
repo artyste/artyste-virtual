@@ -205,7 +205,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 		var ground;
 		var floor;
 
-		var aterFall;
+		var waterFall;
 
 		var time = 0;
 		var SB = BABYLONX.ShaderBuilder;
@@ -410,7 +410,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 					// gl_FragColor.z = 1.0 - gl_FragColor.z;
 					gl_FragColor.a = 1.0;
 					gl_FragColor.g += 0.05;
-					gl_FragColor.b += 0.15;
+					gl_FragColor.b += 0.05;
     		}`;
 
 			waterMat = new BABYLON.ShaderMaterial("shader", scene, {
@@ -453,11 +453,14 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 			var skybox = BABYLON.Mesh.CreateBox("skyBox", 1000.0, scene);
 			var skyboxMaterial = new BABYLON.StandardMaterial("skyBox", scene);
 			skyboxMaterial.backFaceCulling = false;
-			skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("https://playground.babylonjs.com/textures/TropicalSunnyDay", scene);
+			// skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("https://playground.babylonjs.com/textures/TropicalSunnyDay", scene);
+			// skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
+			skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("https://playground.babylonjs.com/textures/forest.env", scene);
 			skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
 			skyboxMaterial.diffuseColor = BABYLON.Color3.Black();
 			skyboxMaterial.specularColor = BABYLON.Color3.Black();
-			skyboxMaterial.ambientColor = new BABYLON.Color3(0.5, 0.5, 0.5);
+			skyboxMaterial.ambientColor = BABYLON.Color3.Black();
+			// skyboxMaterial.ambientColor = new BABYLON.Color3(0.5, 0.5, 0.5);
 			// skyboxMaterial.disableLighting = true;
 			skybox.material = skyboxMaterial;
 			renderTarget.renderList.push(skybox);
@@ -545,7 +548,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 								// 	// pickMesh = mesh;
 								// 	pick = scene.pick(scene.pointerX, scene.pointerY);
 								// }));
-								
+
 								mesh.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger, (e) => {
 									// const pick = scene.pick(scene.pointerX, scene.pointerY);
 									// if (pick && BABYLON.Vector2.Distance(pick.pickedPoint, scene.pick(scene.pointerX, scene.pointerY).pickedPoint) < 0.2 && BABYLON.Vector3.Distance(camera.position, mesh.position) < 20) {
@@ -639,7 +642,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 							if (mesh.name.indexOf("Logo_Float") > -1) {
 								// mesh.createNormals(true);
 								// mesh.unfreezeNormals();
-								logoFloat = mesh;
+								// logoFloat = mesh;
 								var logoMatMulti = new BABYLON.MultiMaterial("logoMatMulti", scene);
 								// logoMatMulti.subMaterials.push(material0);
 								// logoMatMulti.subMaterials.push(material1);
@@ -656,6 +659,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 								}
 								mesh.material = logoMatMulti;
 
+								mesh.visibility = 0;
 								// for (let index = 0; index < mesh.subMeshes.length; index++) {
 								// 	const element = array[index];
 								// 	scene.getMaterialByName("Material #" + (index + 16).toString()) = ;
@@ -674,7 +678,8 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 								waterClone.scaling = new BABYLON.Vector3(2, 2, 2);
 								waterClone.checkCollisions = true;
 								waterClone.visibility = false;
-								aterFall = mesh;
+								waterFall = mesh;
+								// waterFall.visibility = 0;
 							}
 
 							//WALLS + SCENE
@@ -802,7 +807,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 
 
 							//ALL MESHES
-							if (mesh.name.indexOf("aterFall") < 0) {
+							if (mesh.name.indexOf("waterFall") < 0) {
 								renderTarget.renderList.push(mesh);
 							}
 
@@ -810,9 +815,6 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 								// mirrorMaterial.reflectionTexture.renderList.push(mesh);
 							}
 						});
-
-
-
 
 
 						// FinishSceneImport();
@@ -839,7 +841,52 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 						// console.log(124536736)
 					});
 
+				//Monkees
+				var mk1 = BABYLON.SceneLoader.ImportMesh("", "./models/", "mk1.glb", scene, function (newMeshes) {
+					newMeshes.forEach((mesh) => {
+						if (mesh.material != null) {
+							renderTarget.renderList.push(mesh);
+							console.log(mesh.material)
+
+							// newMat = new BABYLON.PBRMaterial("newMat", scene);
+							// newMat.albedoTexture = mesh.material.albedoTexture;
+							// newMat.metallic = 0;;
+							// newMat.roughness = 0;
+							// // newMat.roughnessTexture = mesh.material.roughnessTexture;
+							// mesh.material.directIntensity = 5.0;
+							// mesh.material = newMat;
+
+							// newMat = mesh.material;
+							// mesh.material.albedoColor = new BABYLON.Color3(5,5,5);
+							// mesh.material.directIntensity = 5.0;
+							// mesh.material.specularTexture = mesh.material.baseTexture;
+							// mesh.material.reflectivityColor = mesh.material.baseTexture;
+							// mesh.material.specularColor = mesh.material.albedoTexture;
+							// mesh.material.specularPower = 2000;
+							// mesh.material.reflectionTexture = new BABYLON.CubeTexture("https://playground.babylonjs.com/textures/TropicalSunnyDay", scene);
+							mesh.material.reflectionTexture = new BABYLON.CubeTexture("https://playground.babylonjs.com/textures/environment.env", scene);
+							// mesh.material.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
+							mesh.material.metallic = 1;
+							mesh.material.roughness = 0.6;
+						}
+					});
+					let root = newMeshes[0];
+					root.rotation = new BABYLON.Vector3(0, 0 / 180 * Math.PI, 0);
+					logoFloat = root;
+				})
 			}
+
+
+			// var dome = new BABYLON.PhotoDome(
+			// 	"testdome",
+			// 	"https://playground.babylonjs.com/textures/GatonaParkWalkway1_Panorama_4Kx2K.jpg",
+			// 	{
+			// 		resolution: 32,
+			// 		size: 1000
+			// 	},
+			// 	scene
+			// );
+
 
 			//LOAD AUDIO
 			var music = new BABYLON.Sound("music", "audio/jungle.ogg", scene, function () {
@@ -992,7 +1039,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 			xrHelper.baseExperience.onStateChangedObservable.add((state) => {
 				if (state === BABYLON.WebXRState.IN_XR) {
 					vrCam.position.y = vrHeight;
-					aterFall.visibility = 0;
+					waterFall.visibility = 0;
 				}
 			});
 			vrCam.onAfterCameraTeleport.add((targetPosition) => {
@@ -1019,8 +1066,8 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 
 					//LOGOS
 					if (logoFloat != null) {
-						logoFloat.rotate(BABYLON.Axis.Y, Math.PI * deltaTime * logoSpeed, BABYLON.Space.WORLD);
-						logoFloat.position = new BABYLON.Vector3(logoFloat.position.x, 4 + Math.sin(totalTime * logoFloatSpeed) * 0.5, logoFloat.position.z);
+						logoFloat.rotate(BABYLON.Axis.Y, Math.PI * deltaTime * -logoSpeed, BABYLON.Space.WORLD);
+						logoFloat.position = new BABYLON.Vector3(logoFloat.position.x, 1.2 + Math.sin(totalTime * logoFloatSpeed) * 0.5, logoFloat.position.z);
 					}
 					if (logoSolana != null && logoMetaplex != null) {
 						logoSolana.rotation = camera.position.z > -10 ? new BABYLON.Vector3(0, Math.PI, 0) : new BABYLON.Vector3(0, 0, 0);
