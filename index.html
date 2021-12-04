@@ -410,7 +410,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 					// gl_FragColor.z = 1.0 - gl_FragColor.z;
 					gl_FragColor.a = 1.0;
 					gl_FragColor.g += 0.05;
-					gl_FragColor.b += 0.05;
+					gl_FragColor.b += 0.15;
     		}`;
 
 			waterMat = new BABYLON.ShaderMaterial("shader", scene, {
@@ -807,7 +807,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 
 
 							//ALL MESHES
-							if (mesh.name.indexOf("waterFall") < 0) {
+							if (mesh.name.indexOf("aterFall") < 0) {
 								renderTarget.renderList.push(mesh);
 							}
 
