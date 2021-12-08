@@ -92,38 +92,59 @@
 		var CreateMkMats = function () {
 			console.log("creating mats..")
 
-			for (let i = 0; i < 2; i++) {
+			for (let i = 1; i < mkMats; i++) {
 				mkMatsA[i] = new BABYLON.PBRMaterial("mkMatsA_" + i, scene);
-				mkMatsA[i].albedoTexture = new BABYLON.Texture("./models/mkMats/mk0" + (i + 1) + "/ArmsMat-Color.png", scene, false, false);
-				mkMatsA[i].metallicTexture = new BABYLON.Texture("./models/mkMats/mk0" + (i + 1) + "/ArmsMat-ORM.png", scene, false, false);
-				// mkMatsA[i].metallicTexture.vScale = -1;
+				mkMatsA[i].albedoTexture = new BABYLON.Texture("./models/mkMats/mk0" + (i) + "/ArmsMat-Color.png", scene, false, false);
+				mkMatsA[i].metallicTexture = new BABYLON.Texture("./models/mkMats/mk0" + (i) + "/ArmsMat-ORM.png", scene, false, false);
 				mkMatsA[i].useAmbientOcclusionFromMetallicTextureRed = true;
-				mkMatsA[i].useAmbientInGrayScale = false;
 				mkMatsA[i].useMetallnessFromMetallicTextureBlue = true;
 				mkMatsA[i].useRoughnessFromMetallicTextureGreen = true;
 				mkMatsA[i].useRoughnessFromMetallicTextureAlpha = false;
+				mkMatsA[i].directIntensity = 3;
 
 				mkMatsH[i] = new BABYLON.PBRMaterial("mkMatsH_" + i, scene);
-				mkMatsH[i].albedoTexture = new BABYLON.Texture("./models/mkMats/mk0" + (i + 1) + "/HeadMat-Color.png", scene, false, false);
-				mkMatsH[i].metallicTexture = new BABYLON.Texture("./models/mkMats/mk0" + (i + 1) + "/HeadMat-ORM.png", scene, false, false);
-				// mkMatsH[i].metallicTexture.vScale = -1;
+				mkMatsH[i].albedoTexture = new BABYLON.Texture("./models/mkMats/mk0" + (i) + "/HeadMat-Color.png", scene, false, false);
+				mkMatsH[i].metallicTexture = new BABYLON.Texture("./models/mkMats/mk0" + (i) + "/HeadMat-ORM.png", scene, false, false);
 				mkMatsH[i].useAmbientOcclusionFromMetallicTextureRed = true;
 				mkMatsH[i].useAmbientInGrayScale = false;
 				mkMatsH[i].useMetallnessFromMetallicTextureBlue = true;
 				mkMatsH[i].useRoughnessFromMetallicTextureGreen = true;
 				mkMatsH[i].useRoughnessFromMetallicTextureAlpha = false;
+				mkMatsH[i].directIntensity = 3;
 
 				mkMatsT[i] = new BABYLON.PBRMaterial("mkMatsT_" + i, scene);
-				mkMatsT[i].albedoTexture = new BABYLON.Texture("./models/mkMats/mk0" + (i + 1) + "/TorsoMat-Color.png", scene, false, false);
-				mkMatsT[i].metallicTexture = new BABYLON.Texture("./models/mkMats/mk0" + (i + 1) + "/TorsoMat-ORM.png", scene, false, false);
-				// mkMatsT[i].metallicTexture.vScale = -1;
+				mkMatsT[i].albedoTexture = new BABYLON.Texture("./models/mkMats/mk0" + (i) + "/TorsoMat-Color.png", scene, false, false);
+				mkMatsT[i].metallicTexture = new BABYLON.Texture("./models/mkMats/mk0" + (i) + "/TorsoMat-ORM.png", scene, false, false);
 				mkMatsT[i].useAmbientOcclusionFromMetallicTextureRed = true;
 				mkMatsT[i].useAmbientInGrayScale = false;
 				mkMatsT[i].useMetallnessFromMetallicTextureBlue = true;
 				mkMatsT[i].useRoughnessFromMetallicTextureGreen = true;
 				mkMatsT[i].useRoughnessFromMetallicTextureAlpha = false;
+				mkMatsT[i].directIntensity = 3;
 
 			}
+			mkMatsA[0] = new BABYLON.PBRMaterial("mkMatsA_" + 0, scene);
+			mkMatsA[0].reflectionTexture = new BABYLON.CubeTexture("https://playground.babylonjs.com/textures/environment.env", scene);
+			mkMatsA[0].metallic = 1;
+			mkMatsA[0].roughness = 0.6;
+			mkMatsA[0].directIntensity = 3;
+			mkMatsH[0] = new BABYLON.PBRMaterial("mkMatsH_" + 0, scene);
+			mkMatsH[0].reflectionTexture = mkMatsA[0].reflectionTexture;
+			mkMatsH[0].metallic = 1;
+			mkMatsH[0].roughness = 0.6;
+			mkMatsH[0].directIntensity = 3;
+			mkMatsT[0] = new BABYLON.PBRMaterial("mkMatsT_" + 0, scene);
+			mkMatsT[0].reflectionTexture = mkMatsA[0].reflectionTexture;
+			mkMatsT[0].metallic = 1;
+			mkMatsT[0].roughness = 0.6;
+			mkMatsT[0].directIntensity = 3;
+			// mkMatsA[0].albedoTexture = new BABYLON.Texture("./models/mkMats/mk0" + (i + 1) + "/ArmsMat-Color.png", scene, false, false);
+			// mkMatsA[0].metallicTexture = new BABYLON.Texture("./models/mkMats/mk0" + (i + 1) + "/ArmsMat-ORM.png", scene, false, false);
+			// mkMatsA[0].useAmbientOcclusionFromMetallicTextureRed = true;
+			// mkMatsA[0].useMetallnessFromMetallicTextureBlue = true;
+			// mkMatsA[0].useRoughnessFromMetallicTextureGreen = true;
+			// mkMatsA[0].useRoughnessFromMetallicTextureAlpha = false;
+			// mkMatsA[0].directIntensity = 3;
 			console.log("Finish loading MkMats.");
 		}
 
@@ -247,6 +268,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 		var waterFall;
 
 		var mk1 = null;
+		var mkMats = 3;
 		var mkMatsA = []
 		var mkMatsH = []
 		var mkMatsT = []
@@ -917,7 +939,6 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 						mk1 = root;
 						root.rotation = new BABYLON.Vector3(0, 0 / 180 * Math.PI, 0);
 						logoFloat = root;
-						console.log(newMeshes.length)
 					})
 
 				]).then(() => {
@@ -1142,10 +1163,10 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 
 					if (mk1 != null && totalTime > mkChangeLast + mkChangeTimer) {
 						mkChangeLast = totalTime;
-						let rndIdx = Math.round(Math.random());
-						mk1.getChildren()[0].getChildren()[0].material = mkMatsH[1]
-						mk1.getChildren()[0].getChildren()[1].material = mkMatsT[1]
-						mk1.getChildren()[0].getChildren()[2].material = mkMatsA[1]
+						let rndIdx = Math.floor(Math.random() * mkMats);
+						mk1.getChildren()[0].getChildren()[0].material = mkMatsH[rndIdx]
+						mk1.getChildren()[0].getChildren()[1].material = mkMatsT[rndIdx]
+						mk1.getChildren()[0].getChildren()[2].material = mkMatsA[rndIdx]
 					}
 
 
