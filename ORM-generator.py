@@ -1,4 +1,4 @@
-# v0.1
+# v0.2
 
 from PIL import Image
 import numpy as np
@@ -32,7 +32,7 @@ def ORM_Dir(dir):
     for file in os.listdir(dir):
         if file.endswith("-Color.png"):
             # print('Generating: ' + file.replace('-Color', '-ORM'))
-            inAO = armsAO
+            inAO = armsAO if file.find('Arms') > -1 else headAO if file.find('Head') > -1 else torsoAO
             inRO = os.path.join(dir, file).replace('-Color', '-Roughness')
             inME = os.path.join(dir, file).replace('-Color', '-Metallic')
             orm = ORM_Generate(inAO, inRO, inME)
