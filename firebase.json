@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "target": "artmonkees",
     "public": "public",
     "ignore": [
       "firebase.json",
