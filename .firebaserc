@@ -1,5 +1,14 @@
 {
   "projects": {
     "default": "abgrac-1311"
+  },
+  "targets": {
+    "abgrac-1311": {
+      "hosting": {
+        "artmonkees": [
+          "artmonkees"
+        ]
+      }
+    }
   }
 }
