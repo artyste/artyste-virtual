@@ -260,7 +260,7 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 
 		// var pickMesh = null;
 		var pick;
-		var artSizeMax = 1.4;
+		var artSizeMax = 1.2;
 
 		var ground;
 		var floor;
@@ -695,8 +695,8 @@ result.xyz = color2* max(fs*smoothstep(-2.,2.,length(ref2*0.5+0.5))*28.*vec3(cos
 								matLogo.speculartexture = texLogo;
 								matLogo.specularPower = 200;
 								mesh.material = matLogo;
-								mesh.scaling.x *= 1.5;
-								mesh.scaling.z *= 1.5;
+								mesh.scaling.x *= 2.0;
+								mesh.scaling.z *= 1.0;
 							}
 							//BANNER
 							if (mesh.name.indexOf("GalleyBanne") > -1) {
